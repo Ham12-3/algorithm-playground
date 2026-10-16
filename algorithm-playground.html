@@ -1,0 +1,2009 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Algorithm Playground</title>
+<style>
+:root{
+  --bg:#0a0c11; --panel:#11141b; --panel2:#171b24; --line:#222837; --line2:#2c3344;
+  --text:#e8ebf2; --muted:#8a93a7; --dim:#596174;
+  --accent:#22d3ee; --accent-rgb:34,211,238; --on-accent:#05252c;
+  --font:ui-sans-serif,-apple-system,"Segoe UI Variable","Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+body[data-tab="path"]{--accent:#22d3ee;--accent-rgb:34,211,238;--on-accent:#04262d}
+body[data-tab="nn"]{--accent:#b98cff;--accent-rgb:185,140,255;--on-accent:#1d1033}
+body[data-tab="sort"]{--accent:#fbbf24;--accent-rgb:251,191,36;--on-accent:#2b1d02}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.45 var(--font);-webkit-font-smoothing:antialiased;overflow:hidden;
+  background-image:radial-gradient(1200px 600px at 80% -10%,rgba(var(--accent-rgb),.07),transparent 60%);transition:background-color .5s}
+button,select,input{font:inherit;color:inherit}
+.app{display:grid;grid-template-rows:auto 1fr auto;height:100vh;height:100dvh}
+
+/* header */
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px 14px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:650;font-size:18px;letter-spacing:.1px}
+.brand .mark{width:14px;height:14px;border-radius:4px;background:var(--accent);box-shadow:0 0 20px rgba(var(--accent-rgb),.8);transition:background .5s,box-shadow .5s}
+.brand small{color:var(--dim);font-weight:500;font-size:13px;margin-left:4px}
+.tabs{position:relative;display:flex;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:4px}
+.tab{position:relative;z-index:1;appearance:none;border:0;background:none;color:var(--muted);font-weight:600;font-size:15px;padding:10px 20px;border-radius:9px;cursor:pointer;transition:color .35s;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--on-accent)}
+.tab-ind{position:absolute;top:4px;bottom:4px;left:4px;width:0;border-radius:9px;background:var(--accent);
+  box-shadow:0 4px 24px rgba(var(--accent-rgb),.35);transition:left .5s var(--ease),width .5s var(--ease),background .5s}
+
+/* main */
+main{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;padding:0 24px;min-height:0}
+.stage{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;min-height:0}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:none;opacity:0;transition:opacity .35s}
+.stage canvas.on{display:block}
+.stage canvas.show{opacity:1}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;overflow:auto;min-height:0}
+.pane{display:none;flex-direction:column;gap:20px}
+.pane.on{display:flex;animation:paneIn .4s var(--ease)}
+@keyframes paneIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.group{display:flex;flex-direction:column;gap:9px}
+.label{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.label b{font-weight:600;color:var(--muted);letter-spacing:0;text-transform:none;font-size:13px;font-variant-numeric:tabular-nums}
+.hint{font-size:13.5px;color:var(--muted);line-height:1.5;margin:0}
+.hint kbd{font:600 11.5px var(--font);background:var(--panel2);border:1px solid var(--line2);border-radius:5px;padding:1px 6px;color:var(--text)}
+
+/* inputs */
+.select{appearance:none;-webkit-appearance:none;width:100%;background:var(--panel2);border:1px solid var(--line2);border-radius:11px;padding:11px 40px 11px 14px;font-weight:600;font-size:15px;cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 20px) 52%,calc(100% - 15px) 52%;background-size:5px 5px;background-repeat:no-repeat;transition:border-color .2s}
+.select:hover,.select:focus{border-color:rgba(var(--accent-rgb),.6);outline:none}
+.select option{background:#141821;color:var(--text)}
+.seg{display:flex;background:var(--panel2);border:1px solid var(--line2);border-radius:11px;padding:3px;gap:3px}
+.seg button{flex:1;appearance:none;border:0;background:none;color:var(--muted);font-weight:600;font-size:14px;padding:8px 6px;border-radius:8px;cursor:pointer;transition:background .25s,color .25s,box-shadow .25s;display:flex;align-items:center;justify-content:center;gap:7px}
+.seg button:hover{color:var(--text)}
+.seg button.on{background:#232a38;color:var(--text);box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.55)}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{appearance:none;border:1px solid var(--line2);background:var(--panel2);color:var(--text);font-weight:600;font-size:14px;padding:10px 12px;border-radius:11px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:border-color .2s,background .2s,transform .12s,color .2s;user-select:none;-webkit-user-select:none}
+.btn:hover{border-color:rgba(var(--accent-rgb),.55);background:#1c212c}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);border-color:transparent;color:var(--on-accent);box-shadow:0 6px 24px rgba(var(--accent-rgb),.28)}
+.btn.primary:hover{filter:brightness(1.08);background:var(--accent)}
+.btn.icon{width:44px;height:44px;padding:0}
+.btn svg{width:18px;height:18px;flex:none}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:24px;background:transparent;cursor:pointer;margin:0;
+  --p:50%}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:6px;background:linear-gradient(90deg,var(--accent) var(--p),var(--line2) var(--p))}
+input[type=range]::-moz-range-track{height:6px;border-radius:6px;background:linear-gradient(90deg,var(--accent) var(--p),var(--line2) var(--p))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-6px;border-radius:50%;background:#fff;border:0;box-shadow:0 0 0 4px rgba(var(--accent-rgb),.3),0 2px 6px rgba(0,0,0,.5)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:0;box-shadow:0 0 0 4px rgba(var(--accent-rgb),.3)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat .k{font-size:11.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--dim)}
+.stat .v{font-size:22px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px;letter-spacing:-.01em}
+.stat.wide{grid-column:1/-1}
+.meter{height:10px;border-radius:10px;background:var(--line2);overflow:hidden;margin-top:8px}
+.meter i{display:block;height:100%;width:0;border-radius:10px;background:linear-gradient(90deg,rgba(var(--accent-rgb),.55),var(--accent));box-shadow:0 0 16px rgba(var(--accent-rgb),.6)}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:7px 10px;font-size:13px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:8px}
+
+/* footer */
+footer{display:flex;align-items:center;gap:20px;padding:14px 24px 18px}
+.transport{display:flex;align-items:center;gap:8px;flex:none}
+.speed{display:flex;align-items:center;gap:10px;margin-left:8px;color:var(--muted);font-size:13px;font-weight:600}
+.speed input{width:130px}
+.status{flex:1;display:flex;align-items:center;gap:12px;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 16px;height:46px}
+.status .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px rgba(var(--accent-rgb),.9);flex:none;transition:background .5s}
+.status .dot.idle{background:var(--dim);box-shadow:none}
+#status-text{font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .22s,transform .22s}
+#status-text.out{opacity:0;transform:translateY(4px)}
+
+@media (max-width:900px){
+  body{overflow:auto}
+  .app{height:auto;min-height:100dvh}
+  header{flex-direction:column;align-items:stretch;padding:14px 16px 12px;gap:12px}
+  .tabs{width:100%}.tab{flex:1;padding:10px 6px;font-size:14px}
+  main{grid-template-columns:1fr;padding:0 16px;gap:12px}
+  .stage{height:auto;aspect-ratio:1.35;min-height:260px;max-height:68vh}
+  body[data-tab="path"] .stage{aspect-ratio:1.55}
+  .panel{padding:16px}
+  footer{flex-wrap:wrap;padding:12px 16px 16px;gap:10px;position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 18%)}
+  .status{order:-1;flex-basis:100%;height:auto;min-height:46px}
+  #status-text{white-space:normal;font-size:14.5px}
+  .transport{flex-wrap:wrap;width:100%}
+  .speed{flex:1;margin-left:4px}.speed input{width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body data-tab="path">
+<div class="app">
+  <header>
+    <div class="brand"><span class="mark"></span>Algorithm Playground <small>change the data while it runs</small></div>
+    <nav class="tabs" id="tabs">
+      <span class="tab-ind" id="tab-ind"></span>
+      <button class="tab active" data-tab="path">Pathfinding</button>
+      <button class="tab" data-tab="nn">Neural Net</button>
+      <button class="tab" data-tab="sort">Sorting</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="stage" id="stage">
+      <canvas id="cv-path" class="on show"></canvas>
+      <canvas id="cv-nn"></canvas>
+      <canvas id="cv-sort"></canvas>
+    </section>
+
+    <aside class="panel">
+      <!-- PATHFINDING -->
+      <div class="pane on" data-pane="path">
+        <div class="group">
+          <div class="label">Algorithm</div>
+          <select class="select" id="pf-algo">
+            <option value="bfs">Breadth-first search</option>
+            <option value="dijkstra">Dijkstra</option>
+            <option value="astar" selected>A*</option>
+            <option value="dstar">D* Lite (incremental)</option>
+          </select>
+        </div>
+        <div class="group">
+          <div class="label">Brush</div>
+          <div class="seg" id="pf-brush">
+            <button data-v="wall" class="on"><span class="sw" style="background:#4a536a"></span>Wall</button>
+            <button data-v="mud"><span class="sw" style="background:#8a6a3a"></span>Mud</button>
+            <button data-v="erase"><span class="sw" style="background:transparent;box-shadow:inset 0 0 0 1.5px #596174"></span>Erase</button>
+          </div>
+        </div>
+        <div class="grid2">
+          <button class="btn" id="pf-maze">Maze</button>
+          <button class="btn" id="pf-clear">Clear walls</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="k">Explored</div><div class="v" id="pf-explored">0</div></div>
+          <div class="stat"><div class="k">Frontier</div><div class="v" id="pf-frontier">0</div></div>
+          <div class="stat"><div class="k">Path length</div><div class="v" id="pf-len">–</div></div>
+          <div class="stat"><div class="k">Path cost</div><div class="v" id="pf-cost">–</div></div>
+          <div class="stat wide"><div class="k">Re-plans</div><div class="v" id="pf-replans">0</div></div>
+        </div>
+        <div class="legend">
+          <span><span class="sw" style="background:#34d399;border-radius:50%"></span>Start</span>
+          <span><span class="sw" style="background:#fb7185;border-radius:50%"></span>Goal</span>
+          <span><span class="sw" style="background:rgba(34,211,238,.9)"></span>Frontier</span>
+          <span><span class="sw" style="background:rgba(34,211,238,.3)"></span>Explored</span>
+          <span><span class="sw" style="background:#e9fbff"></span>Path</span>
+          <span><span class="sw" style="background:#8a6a3a"></span>Mud (cost 5)</span>
+        </div>
+        <p class="hint">Drag on the grid to draw while it searches. Drag the start or goal to move them. The search adapts instead of starting over.</p>
+      </div>
+
+      <!-- NEURAL NET -->
+      <div class="pane" data-pane="nn">
+        <div class="group">
+          <div class="label">Dataset</div>
+          <div class="grid2" id="nn-presets">
+            <button class="btn" data-v="blobs">Two blobs</button>
+            <button class="btn" data-v="circles">Circles</button>
+            <button class="btn" data-v="spiral">Spiral</button>
+            <button class="btn" data-v="xor">XOR</button>
+          </div>
+        </div>
+        <div class="group">
+          <div class="label">Click adds <b>shift-click adds the other</b></div>
+          <div class="seg" id="nn-class">
+            <button data-v="0" class="on"><span class="sw" style="background:#ff6b8b;border-radius:50%"></span>Class A</button>
+            <button data-v="1"><span class="sw" style="background:#45c8f5;border-radius:50%"></span>Class B</button>
+          </div>
+        </div>
+        <div class="group">
+          <div class="label">Learning rate <b id="nn-lr-v">0.030</b></div>
+          <input type="range" id="nn-lr" min="0" max="100" value="51">
+        </div>
+        <div class="group">
+          <div class="label">Hidden units <b id="nn-hu-v">8</b></div>
+          <input type="range" id="nn-hu" min="2" max="16" value="8">
+        </div>
+        <div class="group">
+          <div class="label">Hidden layers</div>
+          <div class="seg" id="nn-layers">
+            <button data-v="1">1 layer</button>
+            <button data-v="2" class="on">2 layers</button>
+          </div>
+        </div>
+        <div class="grid2">
+          <button class="btn" id="nn-resetw">Reset weights</button>
+          <button class="btn" id="nn-clear">Clear points</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="k">Loss</div><div class="v" id="nn-loss">–</div></div>
+          <div class="stat"><div class="k">Accuracy</div><div class="v" id="nn-acc">–</div></div>
+          <div class="stat"><div class="k">Steps</div><div class="v" id="nn-steps">0</div></div>
+          <div class="stat"><div class="k">Points</div><div class="v" id="nn-pts">0</div></div>
+        </div>
+        <p class="hint">Drag any point and watch the boundary follow. Right-click a point to delete it.</p>
+      </div>
+
+      <!-- SORTING -->
+      <div class="pane" data-pane="sort">
+        <div class="group">
+          <div class="label">Algorithm</div>
+          <select class="select" id="so-algo">
+            <option value="bubble">Bubble sort</option>
+            <option value="insertion">Insertion sort</option>
+            <option value="selection">Selection sort</option>
+            <option value="quick" selected>Quicksort</option>
+            <option value="merge">Merge sort</option>
+          </select>
+        </div>
+        <div class="group">
+          <div class="label">New data</div>
+          <div class="grid2" id="so-presets">
+            <button class="btn" data-v="random">Random</button>
+            <button class="btn" data-v="nearly">Nearly sorted</button>
+            <button class="btn" data-v="reversed">Reversed</button>
+            <button class="btn" data-v="few">Few unique</button>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="k">Comparisons</div><div class="v" id="so-cmp">0</div></div>
+          <div class="stat"><div class="k">Swaps</div><div class="v" id="so-swp">0</div></div>
+          <div class="stat wide"><div class="k" style="display:flex;justify-content:space-between">Sortedness <span id="so-pct" style="color:var(--text)">0%</span></div><div class="meter"><i id="so-meter"></i></div></div>
+        </div>
+        <div class="legend">
+          <span><span class="sw" style="background:#fbbf24"></span>Comparing</span>
+          <span><span class="sw" style="background:#fff7e0"></span>Swapping</span>
+          <span><span class="sw" style="background:#f472b6"></span>Pivot</span>
+          <span><span class="sw" style="background:#6b5a2a"></span>In final place</span>
+        </div>
+        <p class="hint">Drag a bar sideways to move it. Drag its top to change its height. The sort carries on with whatever you changed.</p>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    <div class="transport">
+      <button class="btn icon primary" id="t-play" title="Play / pause (Space)" aria-label="Play or pause">
+        <svg viewBox="0 0 24 24" id="ic-pause"><rect x="6" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></svg>
+        <svg viewBox="0 0 24 24" id="ic-play" style="display:none"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.2-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" fill="currentColor"/></svg>
+      </button>
+      <button class="btn icon" id="t-step" title="Step once (→)" aria-label="Step once">
+        <svg viewBox="0 0 24 24"><path d="M6 6.2v11.6a.9.9 0 0 0 1.4.75l8.2-5.8a.9.9 0 0 0 0-1.5L7.4 5.45A.9.9 0 0 0 6 6.2z" fill="currentColor"/><rect x="17" y="5" width="2.6" height="14" rx="1" fill="currentColor"/></svg>
+      </button>
+      <button class="btn icon" id="t-reset" title="Reset (R)" aria-label="Reset">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4.5v4.2h4.2"/></svg>
+      </button>
+      <label class="speed">Speed <input type="range" id="t-speed" min="1" max="10" value="6"></label>
+    </div>
+    <div class="status"><span class="dot" id="status-dot"></span><span id="status-text">Loading…</span></div>
+  </footer>
+</div>
+<script>
+(() => {
+'use strict';
+
+/* ================================================================
+   Shared helpers
+   ================================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+// frame-rate independent exponential easing toward a target
+const damp = (a, b, k, dt) => a + (b - a) * (1 - Math.exp(-k * dt));
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+
+function rgba(rgb, a) { return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`; }
+function mix(c1, c2, t) { return [lerp(c1[0], c2[0], t), lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t)]; }
+
+function roundRect(ctx, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// Binary min-heap. Entries are plain objects compared with `less`.
+class Heap {
+  constructor(less) { this.a = []; this.less = less; }
+  get size() { return this.a.length; }
+  peek() { return this.a[0]; }
+  clear() { this.a.length = 0; }
+  push(x) {
+    const a = this.a; a.push(x);
+    let i = a.length - 1;
+    while (i > 0) {
+      const p = (i - 1) >> 1;
+      if (!this.less(a[i], a[p])) break;
+      [a[i], a[p]] = [a[p], a[i]]; i = p;
+    }
+  }
+  pop() {
+    const a = this.a, top = a[0], last = a.pop();
+    if (a.length) {
+      a[0] = last;
+      let i = 0; const n = a.length;
+      for (;;) {
+        const l = 2 * i + 1, r = l + 1; let m = i;
+        if (l < n && this.less(a[l], a[m])) m = l;
+        if (r < n && this.less(a[r], a[m])) m = r;
+        if (m === i) break;
+        [a[i], a[m]] = [a[m], a[i]]; i = m;
+      }
+    }
+    return top;
+  }
+}
+
+// Size a canvas to its CSS box at device pixel ratio; returns drawing info.
+function fitCanvas(cv) {
+  const r = cv.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w: r.width, h: r.height, dpr };
+}
+
+// Unified mouse + touch + pen handling with pointer capture.
+function pointerize(cv, h) {
+  let active = null;
+  const pos = e => {
+    const r = cv.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top, shift: e.shiftKey, alt: e.altKey, type: e.pointerType };
+  };
+  cv.addEventListener('pointerdown', e => {
+    if (e.button === 2) { h.context && h.context(pos(e)); e.preventDefault(); return; }
+    if (active !== null) return;
+    active = e.pointerId;
+    try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+    h.down && h.down(pos(e));
+    e.preventDefault();
+  });
+  cv.addEventListener('pointermove', e => {
+    if (e.pointerId === active) h.move && h.move(pos(e));
+    else if (active === null) h.hover && h.hover(pos(e));
+  });
+  const end = e => { if (e.pointerId !== active) return; active = null; h.up && h.up(pos(e)); };
+  cv.addEventListener('pointerup', end);
+  cv.addEventListener('pointercancel', end);
+  cv.addEventListener('pointerleave', () => { if (active === null && h.leave) h.leave(); });
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+}
+
+function fillRange(r) { r.style.setProperty('--p', ((r.value - r.min) / (r.max - r.min) * 100) + '%'); }
+function segmented(el, cb) {
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    for (const x of el.children) x.classList.toggle('on', x === b);
+    cb(b.dataset.v);
+  });
+}
+function segSet(el, v) { for (const x of el.children) x.classList.toggle('on', x.dataset.v === String(v)); }
+
+/* ================================================================
+   Status line: throttled so fast animations don't flicker,
+   with "held" messages for user-triggered events.
+   ================================================================ */
+const Status = {
+  el: $('#status-text'), dot: $('#status-dot'),
+  cur: '', pending: null, lastShown: 0, holdUntil: 0, swapTimer: 0,
+  set(text, hold = 0) {
+    const now = performance.now();
+    if (hold) { this.holdUntil = now + hold; this.show(text, true); return; }
+    if (now < this.holdUntil) return;
+    this.pending = text;
+  },
+  clearHold() { this.holdUntil = 0; },
+  show(text, fade) {
+    this.pending = null;
+    if (text === this.cur) return;
+    const sameKind = this.cur.slice(0, 16) === text.slice(0, 16);
+    this.cur = text; this.lastShown = performance.now();
+    clearTimeout(this.swapTimer);
+    if (!fade && sameKind) { this.el.textContent = text; this.el.classList.remove('out'); return; }
+    this.el.classList.add('out');
+    this.swapTimer = setTimeout(() => { this.el.textContent = this.cur; this.el.classList.remove('out'); }, 160);
+  },
+  tick(now) {
+    if (this.pending !== null && now >= this.holdUntil && now - this.lastShown > 320) this.show(this.pending, false);
+  }
+};
+
+/* ================================================================
+   App shell: tabs, shared transport, main loop
+   ================================================================ */
+const App = {
+  mods: {}, active: null, activeId: null, last: 0,
+  register(id, m) { this.mods[id] = m; },
+  switchTo(id) {
+    if (id === this.activeId) return;
+    const prev = this.active, next = this.mods[id];
+    document.body.dataset.tab = id;
+    for (const t of $$('.tab')) t.classList.toggle('active', t.dataset.tab === id);
+    for (const p of $$('.pane')) p.classList.toggle('on', p.dataset.pane === id);
+    moveIndicator();
+    if (prev) {
+      prev.deactivate && prev.deactivate();
+      const oc = prev.canvas; oc.classList.remove('show');
+      setTimeout(() => { if (App.active !== prev) oc.classList.remove('on'); }, 350);
+    }
+    this.active = next; this.activeId = id;
+    next.canvas.classList.add('on');
+    requestAnimationFrame(() => next.canvas.classList.add('show'));
+    next.resize();
+    next.activate && next.activate();
+    speedEl.value = next.speed; fillRange(speedEl);
+    Status.clearHold();
+    try { localStorage.setItem('algo-playground-tab', id); } catch (_) {}
+  }
+};
+
+function moveIndicator() {
+  const act = $('.tab.active'), ind = $('#tab-ind');
+  if (!act) return;
+  ind.style.left = act.offsetLeft + 'px';
+  ind.style.width = act.offsetWidth + 'px';
+}
+
+const speedEl = $('#t-speed');
+fillRange(speedEl);
+for (const r of $$('input[type=range]')) r.addEventListener('input', () => fillRange(r));
+
+$('#tabs').addEventListener('click', e => {
+  const b = e.target.closest('.tab'); if (b) App.switchTo(b.dataset.tab);
+});
+$('#t-play').addEventListener('click', () => { const m = App.active; m.setPlaying(!m.playing); });
+$('#t-step').addEventListener('click', () => { const m = App.active; m.setPlaying(false); m.step(); });
+$('#t-reset').addEventListener('click', () => App.active.reset());
+speedEl.addEventListener('input', () => { App.active.speed = +speedEl.value; });
+
+window.addEventListener('keydown', e => {
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'select' || (tag === 'input' && e.target.type !== 'range')) return;
+  const m = App.active; if (!m) return;
+  if (e.code === 'Space') { e.preventDefault(); m.setPlaying(!m.playing); }
+  else if (e.code === 'ArrowRight' && tag !== 'input') { e.preventDefault(); m.setPlaying(false); m.step(); }
+  else if (e.key === 'r' || e.key === 'R') { if (!e.metaKey && !e.ctrlKey) m.reset(); }
+  else if (e.key === '1') App.switchTo('path');
+  else if (e.key === '2') App.switchTo('nn');
+  else if (e.key === '3') App.switchTo('sort');
+});
+
+let shownPlaying = null;
+function syncTransport() {
+  const p = !!App.active.playing;
+  if (p === shownPlaying) return;
+  shownPlaying = p;
+  $('#ic-play').style.display = p ? 'none' : '';
+  $('#ic-pause').style.display = p ? '' : 'none';
+  Status.dot.classList.toggle('idle', !p);
+}
+
+function loop(t) {
+  const dt = Math.min(0.05, App.last ? (t - App.last) / 1000 : 0.016);
+  App.last = t;
+  if (App.active) { App.active.frame(dt, t); syncTransport(); }
+  Status.tick(t);
+  requestAnimationFrame(loop);
+}
+
+const onResize = () => { moveIndicator(); App.active && App.active.resize(); };
+window.addEventListener('resize', onResize);
+if (window.ResizeObserver) new ResizeObserver(onResize).observe($('#stage'));
+
+
+/* ================================================================
+   PATHFINDING — world + search engines
+   ================================================================ */
+const PF_COLS = 40, PF_ROWS = 25, PF_N = PF_COLS * PF_ROWS, MUD_COST = 5;
+const World = {
+  wall: new Uint8Array(PF_N),
+  mud: new Uint8Array(PF_N),
+  start: 12 * PF_COLS + 6,
+  goal: 12 * PF_COLS + 33
+};
+const pxOf = i => i % PF_COLS, pyOf = i => (i / PF_COLS) | 0;
+const manhattan = (a, b) => Math.abs(pxOf(a) - pxOf(b)) + Math.abs(pyOf(a) - pyOf(b));
+const cellCost = i => World.wall[i] ? Infinity : World.mud[i] ? MUD_COST : 1;
+// 4-connected neighbour lists (up, right, down, left)
+const NB = [];
+for (let i = 0; i < PF_N; i++) {
+  const x = pxOf(i), y = pyOf(i), l = [];
+  if (y > 0) l.push(i - PF_COLS);
+  if (x < PF_COLS - 1) l.push(i + 1);
+  if (y < PF_ROWS - 1) l.push(i + PF_COLS);
+  if (x > 0) l.push(i - 1);
+  NB.push(l);
+}
+
+/*
+  BFS / Dijkstra / A* share one engine: a best-first search that is allowed
+  to RE-OPEN cells when it finds a cheaper route. That makes it a
+  label-correcting search, which is what lets it repair itself:
+   - cost goes up (wall/mud drawn): only the part of the search tree that
+     ran through that cell is dropped; surviving neighbours are re-queued.
+   - cost goes down (wall erased): the cell is relaxed from its explored
+     neighbours and re-queued; any shortcut then ripples outward.
+   - goal moves: distances from the start are still valid. A* just re-keys
+     its frontier with the new heuristic; BFS/Dijkstra change nothing.
+   - start moves: every distance is wrong, so it starts a new search.
+  Stop rule: the goal has a finite cost and nothing left in the queue could
+  beat it.
+*/
+function ClassicEngine(kind) {
+  const g = new Float64Array(PF_N), parent = new Int32Array(PF_N);
+  const state = new Uint8Array(PF_N);   // 0 = unseen, 1 = frontier, 2 = explored
+  const ver = new Uint32Array(PF_N);    // lazy-deletion stamps for heap entries
+  const isA = kind === 'astar', isBFS = kind === 'bfs';
+  let s = 0, t = 0, tie = 0;
+  const cost = isBFS ? (i => World.wall[i] ? Infinity : 1) : cellCost;
+  const oldCost = (wasWall, wasMud) => wasWall ? Infinity : (isBFS || !wasMud ? 1 : MUD_COST);
+  const h = i => isA ? manhattan(i, t) : 0;
+  const heap = new Heap(isA
+    ? (p, q) => p.f !== q.f ? p.f < q.f : p.h !== q.h ? p.h < q.h : p.tie < q.tie
+    : (p, q) => p.f !== q.f ? p.f < q.f : p.tie < q.tie);
+
+  function push(i) {
+    ver[i]++; state[i] = 1;
+    const hh = h(i);
+    heap.push({ i, f: g[i] + hh, h: hh, tie: tie++, v: ver[i] });
+  }
+  function top() {
+    while (heap.size) {
+      const e = heap.peek();
+      if (e.v === ver[e.i] && state[e.i] === 1) return e;
+      heap.pop();
+    }
+    return null;
+  }
+
+  const E = {
+    kind, finished: false, expanded: 0,
+    reset(start, goal) {
+      s = start; t = goal; tie = 0;
+      g.fill(Infinity); parent.fill(-1); state.fill(0); heap.clear();
+      E.expanded = 0; E.finished = false;
+      g[s] = 0; push(s);
+    },
+    step() {
+      const e = top();
+      if (!e || (g[t] < Infinity && e.f >= g[t])) {
+        E.finished = true;
+        return { type: g[t] < Infinity ? 'done' : 'nopath' };
+      }
+      heap.pop();
+      const u = e.i; state[u] = 2; E.expanded++;
+      for (const v of NB[u]) {
+        const c = cost(v);
+        if (c === Infinity) continue;
+        const ng = g[u] + c;
+        if (ng < g[v]) { g[v] = ng; parent[v] = u; push(v); }
+      }
+      return { type: 'expand', u, g: g[u], h: e.h };
+    },
+    changed(list) {
+      const inc = new Set(), dec = [];
+      for (const ch of list) {
+        const o = oldCost(ch.wasWall, ch.wasMud), n = cost(ch.i);
+        if (n > o) inc.add(ch.i); else if (n < o) dec.push(ch.i);
+      }
+      let dropped = 0, reopened = 0;
+      if (inc.size) {
+        // 1 = tree path to start is intact, 2 = path runs through a changed cell
+        const mark = new Uint8Array(PF_N), stack = [];
+        for (let i = 0; i < PF_N; i++) {
+          if (g[i] === Infinity || mark[i]) continue;
+          let j = i, res = 1; stack.length = 0;
+          while (j !== -1) {
+            if (mark[j]) { res = mark[j]; break; }
+            if (inc.has(j)) { res = 2; mark[j] = 2; dropped++; break; }
+            stack.push(j); j = parent[j];
+          }
+          for (const k of stack) { mark[k] = res; if (res === 2) dropped++; }
+        }
+        for (let i = 0; i < PF_N; i++) if (mark[i] === 2) {
+          g[i] = Infinity; parent[i] = -1; state[i] = 0; ver[i]++;
+        }
+        for (let i = 0; i < PF_N; i++) {
+          if (mark[i] !== 2) continue;
+          for (const v of NB[i]) if (mark[v] === 1 && state[v] === 2) { push(v); reopened++; }
+        }
+      }
+      for (const d of dec) {
+        const c = cost(d); let best = g[d], bp = -1;
+        for (const u of NB[d]) if (state[u] === 2 && g[u] + c < best) { best = g[u] + c; bp = u; }
+        if (bp >= 0) { g[d] = best; parent[d] = bp; push(d); reopened++; }
+      }
+      if (inc.size || dec.length) E.finished = false;
+      return { dropped, reopened, inc: inc.size, dec: dec.length };
+    },
+    goalMoved(goal) {
+      t = goal;
+      if (isA) { heap.clear(); for (let i = 0; i < PF_N; i++) if (state[i] === 1) push(i); }
+      E.finished = false;
+      return 'keep';
+    },
+    startMoved(start) { E.reset(start, t); return 'restart'; },
+    visited: i => state[i] === 2,
+    frontier: i => state[i] === 1,
+    gOf: i => g[i],
+    path() {
+      if (g[t] === Infinity) return null;
+      const p = []; let j = t, guard = 0;
+      while (j !== -1 && guard++ <= PF_N) { p.push(j); if (j === s) break; j = parent[j]; }
+      return p[p.length - 1] === s ? p.reverse() : null;
+    }
+  };
+  return E;
+}
+
+/*
+  D* Lite (Koenig & Likhachev 2002). Searches backward from the goal, so
+  g(cell) = cost from that cell to the goal. When costs change it only
+  re-examines vertices whose rhs/g disagree. When the start moves it
+  adds the heuristic shift to km instead of re-keying the queue.
+*/
+function DStarEngine() {
+  const g = new Float64Array(PF_N), rhs = new Float64Array(PF_N);
+  const ver = new Uint32Array(PF_N), open = new Uint8Array(PF_N);
+  let s = 0, t = 0, km = 0, tie = 0;
+  const heap = new Heap((p, q) => p.k1 !== q.k1 ? p.k1 < q.k1 : p.k2 !== q.k2 ? p.k2 < q.k2 : p.tie < q.tie);
+  const edge = (u, v) => (World.wall[u] || World.wall[v]) ? Infinity : cellCost(v);
+  const keyLess = (a1, a2, b1, b2) => a1 < b1 || (a1 === b1 && a2 < b2);
+  function key(u) { const m = Math.min(g[u], rhs[u]); return [m + manhattan(s, u) + km, m]; }
+  function insert(u) { const k = key(u); ver[u]++; open[u] = 1; heap.push({ u, k1: k[0], k2: k[1], tie: tie++, v: ver[u] }); }
+  function remove(u) { if (open[u]) { ver[u]++; open[u] = 0; } }
+  function update(u) {
+    if (u !== t) {
+      let best = Infinity;
+      for (const v of NB[u]) { const c = edge(u, v) + g[v]; if (c < best) best = c; }
+      rhs[u] = best;
+    }
+    remove(u);
+    if (g[u] !== rhs[u]) insert(u);
+  }
+  function top() {
+    while (heap.size) {
+      const e = heap.peek();
+      if (e.v === ver[e.u] && open[e.u]) return e;
+      heap.pop();
+    }
+    return null;
+  }
+
+  const E = {
+    kind: 'dstar', finished: false, expanded: 0,
+    reset(start, goal) {
+      s = start; t = goal; km = 0; tie = 0;
+      g.fill(Infinity); rhs.fill(Infinity); open.fill(0); heap.clear();
+      E.expanded = 0; E.finished = false;
+      rhs[t] = 0; insert(t);
+    },
+    step() {
+      for (;;) {
+        const e = top();
+        const ks = key(s);
+        if (!e || (!keyLess(e.k1, e.k2, ks[0], ks[1]) && rhs[s] === g[s])) {
+          E.finished = true;
+          return { type: g[s] < Infinity ? 'done' : 'nopath' };
+        }
+        heap.pop(); const u = e.u; open[u] = 0;
+        const kn = key(u);
+        // stale key after km changed: re-insert and keep going (not a visible step)
+        if (keyLess(e.k1, e.k2, kn[0], kn[1])) { insert(u); continue; }
+        E.expanded++;
+        if (g[u] > rhs[u]) {
+          g[u] = rhs[u];
+          for (const p of NB[u]) update(p);
+          return { type: 'expand', u, g: g[u], h: manhattan(s, u) };
+        }
+        g[u] = Infinity; update(u);
+        for (const p of NB[u]) update(p);
+        return { type: 'raise', u, g: rhs[u], h: manhattan(s, u) };
+      }
+    },
+    changed(list) {
+      const touched = new Set();
+      for (const ch of list) { touched.add(ch.i); for (const v of NB[ch.i]) touched.add(v); }
+      for (const u of touched) update(u);
+      E.finished = false;
+      return { touched: touched.size, inc: list.filter(c => cellCost(c.i) > (c.wasWall ? Infinity : c.wasMud ? MUD_COST : 1)).length };
+    },
+    startMoved(ns) { km += manhattan(s, ns); s = ns; E.finished = false; return 'keep'; },
+    goalMoved(ng) { E.reset(s, ng); return 'restart'; },
+    visited: i => g[i] < Infinity,
+    frontier: i => open[i] === 1,
+    gOf: i => Math.min(g[i], rhs[i]),
+    path() {
+      if (g[s] === Infinity) return null;
+      const p = [s]; let u = s, guard = 0;
+      while (u !== t && guard++ < PF_N) {
+        let best = Infinity, bn = -1;
+        for (const v of NB[u]) { const c = edge(u, v) + g[v]; if (c < best) { best = c; bn = v; } }
+        if (bn < 0 || best === Infinity) return null;
+        u = bn; p.push(u);
+      }
+      return u === t ? p : null;
+    }
+  };
+  return E;
+}
+
+/* ================================================================
+   PATHFINDING — interaction + rendering
+   ================================================================ */
+const PF = (() => {
+  const cv = $('#cv-path');
+  const W = World;
+  const C = {
+    acc: [34, 211, 238], accDeep: [24, 92, 160], start: [52, 211, 153], goal: [251, 113, 133],
+    wall: [70, 80, 104], wallTop: [104, 116, 146], mud: [124, 94, 50], cell: [21, 25, 35], path: [236, 252, 255]
+  };
+  const NAME = { bfs: 'BFS', dijkstra: 'Dijkstra', astar: 'A*', dstar: 'D* Lite' };
+  const BLURB = {
+    bfs: 'it explores in rings and ignores mud',
+    dijkstra: 'it always expands the cheapest cell, so it goes around mud',
+    astar: 'Dijkstra with a pull toward the goal',
+    dstar: 'it searches backward from the goal and repairs its plan when the grid changes'
+  };
+  const SPS = [3, 8, 15, 30, 60, 120, 240, 480, 1000, 2500];
+
+  // eased per-cell display values
+  const vVis = new Float32Array(PF_N), vFront = new Float32Array(PF_N), vWall = new Float32Array(PF_N);
+  const vMud = new Float32Array(PF_N), vG = new Float32Array(PF_N), flash = new Float32Array(PF_N);
+
+  let ctx, cw = 0, ch = 0, dpr = 1, cell = 20, ox = 0, oy = 0, gridCache = null;
+  let algo = 'astar', engine = null, playing = true, acc = 0, time = 0;
+  let brush = 'wall', drag = null, hoverMarker = null;
+  const pending = new Map();
+  const mk = { start: { x: 0, y: 0, s: 1 }, goal: { x: 0, y: 0, s: 1 } };
+  let pathShown = null, pathPts = null, pathLen = 0, pathReveal = 0, pathAlpha = 0, pathStale = false, noPath = false;
+  let replans = 0, firstSearch = null, inReplan = false, replanBase = 0, maxG = 10, lastMsg = '';
+
+  const mod = {
+    canvas: cv, speed: 6,
+    get playing() { return playing; },
+    setPlaying(b) {
+      playing = b;
+      if (!b) Status.set('Paused. Edit freely, then press play or step to continue.', 1600);
+    },
+    step() {
+      applyPending();
+      if (engine.finished) { Status.set('Nothing to do — the path is already up to date. Change the grid to give it work.', 2000); return; }
+      doStep();
+    },
+    reset() { restart(); Status.set(`Reset — ${NAME[algo]} is starting a fresh search`, 1800); },
+    resize, frame, activate() {}
+  };
+
+  /* ---------- engine control ---------- */
+  function makeEngine() { engine = algo === 'dstar' ? DStarEngine() : ClassicEngine(algo); engine.reset(W.start, W.goal); }
+  function restart() {
+    engine.reset(W.start, W.goal);
+    inReplan = false; firstSearch = null; pathStale = !!pathShown; noPath = false;
+  }
+  function beginReplan() {
+    if (!inReplan) { inReplan = true; replanBase = engine.expanded; replans++; }
+    if (pathShown) pathStale = true;
+  }
+
+  function doStep() {
+    const r = engine.step();
+    if (r.type === 'expand' || r.type === 'raise') {
+      flash[r.u] = 1;
+      Status.set((inReplan ? 'Re-planning: ' : '') + describe(r));
+    } else finish(r.type);
+  }
+
+  function describe(r) {
+    switch (algo) {
+      case 'bfs': return `BFS is exploring cells ${r.g} step${r.g === 1 ? '' : 's'} from the start — it finishes each ring before the next`;
+      case 'dijkstra': return `Dijkstra is expanding the cheapest cell on the frontier (cost ${r.g} from the start)`;
+      case 'astar': return `A* is checking the cell closest to the goal: ${r.g} travelled + about ${r.h} still to go`;
+      default: return r.type === 'raise'
+        ? 'D* Lite is raising a cell whose old route got blocked, so its neighbours look elsewhere'
+        : `D* Lite is searching backward from the goal and settling a cell ${r.g} away from it`;
+    }
+  }
+
+  function finish(type) {
+    if (type === 'done') {
+      setPath(engine.path());
+      noPath = false;
+      const len = pathShown ? pathShown.length - 1 : 0, cost = pathCost();
+      const lc = `${len} steps` + (cost !== len ? `, cost ${cost}` : '');
+      if (inReplan && firstSearch !== null) {
+        Status.set(`Re-planned with ${fmt(engine.expanded - replanBase)} extra steps (the first search took ${fmt(firstSearch)}). Path: ${lc}.`, 2600);
+      } else {
+        firstSearch = engine.expanded;
+        Status.set(`Found a path: ${lc}. Draw walls or drag the markers — it re-plans live.`, 2600);
+      }
+    } else {
+      noPath = true; pathStale = true;
+      if (firstSearch === null) firstSearch = engine.expanded;
+      Status.set('No path — the goal is walled off. Erase a wall to open a route and it will find it.', 2600);
+    }
+    inReplan = false;
+  }
+
+  function setPath(p) {
+    if (!p) { pathStale = true; return; }
+    let k = 0;
+    if (pathShown) while (k < p.length && k < pathShown.length && p[k] === pathShown[k]) k++;
+    pathReveal = Math.min(pathStale ? 0 : pathReveal, Math.max(0, k - 1));
+    if (!pathShown) pathReveal = 0;
+    pathShown = p; pathStale = false;
+    pathPts = p.map(i => [pxOf(i) + 0.5, pyOf(i) + 0.5]);
+    pathLen = p.length - 1;
+  }
+  function pathCost() {
+    if (!pathShown) return 0;
+    let c = 0;
+    for (let k = 1; k < pathShown.length; k++) c += algo === 'bfs' ? 1 : cellCost(pathShown[k]);
+    return c;
+  }
+
+  /* ---------- world edits ---------- */
+  function setCell(i, wl, md) {
+    if (i === W.start || i === W.goal) return false;
+    if (W.wall[i] === wl && W.mud[i] === md) return false;
+    if (!pending.has(i)) pending.set(i, { i, wasWall: W.wall[i], wasMud: W.mud[i] });
+    W.wall[i] = wl; W.mud[i] = md;
+    return true;
+  }
+  function applyPending() {
+    if (!pending.size) return;
+    const list = [...pending.values()].filter(c => c.wasWall !== W.wall[c.i] || c.wasMud !== W.mud[c.i]);
+    pending.clear();
+    if (!list.length) return;
+    const res = engine.changed(list);
+    if (engine.finished) return;
+    beginReplan();
+    const added = list.filter(c => cellCost(c.i) > (c.wasWall ? Infinity : c.wasMud ? MUD_COST : 1)).length;
+    const n = NAME[algo];
+    let msg;
+    if (algo === 'dstar') {
+      msg = added ? 'D* Lite is repairing only the cells whose cost changed around your edit — the rest of its plan stays'
+                  : 'You opened a gap — D* Lite updates the costs next to it and lets any shortcut ripple out';
+    } else if (algo === 'bfs' && list.every(c => !c.wasWall && !W.wall[c.i])) {
+      msg = 'BFS ignores mud — it counts steps, not cost. Try Dijkstra or A* to see mud matter';
+    } else if (added) {
+      msg = res.dropped
+        ? `You blocked ${fmt(res.dropped)} explored cell${res.dropped === 1 ? '' : 's'} — ${n} drops only that branch and re-grows it from the edges`
+        : `Wall drawn in unexplored space — ${n} keeps everything and will route around it`;
+    } else {
+      msg = `You opened a gap — ${n} checks whether it's a shortcut from the explored cells beside it`;
+    }
+    Status.set(msg, 2200);
+  }
+
+  function moveMarker(which, i) {
+    if (i < 0 || W.wall[i] || i === W.start || i === W.goal) return;
+    applyPending();
+    const n = NAME[algo];
+    if (which === 'start') {
+      W.start = i;
+      if (engine.startMoved(i) === 'restart') {
+        inReplan = false; firstSearch = null; pathStale = !!pathShown;
+        Status.set(`Start moved — every distance was measured from the old start, so ${n} grows a new search from here`, 2200);
+      } else {
+        beginReplan();
+        Status.set('Start moved — D* Lite keeps its whole search tree and only re-checks the route from here', 2200);
+      }
+    } else {
+      W.goal = i;
+      if (engine.goalMoved(i) === 'restart') {
+        inReplan = false; firstSearch = null; pathStale = !!pathShown;
+        Status.set('Goal moved — D* Lite searches outward from the goal, so it starts a fresh search', 2200);
+      } else {
+        beginReplan();
+        Status.set(algo === 'astar'
+          ? 'Goal moved — A* keeps everything it explored and re-aims its frontier at the new goal'
+          : `Goal moved — distances from the start are still valid, so ${n} just keeps going`, 2200);
+      }
+    }
+  }
+
+  function cellsOnLine(a, b) {
+    let x0 = pxOf(a), y0 = pyOf(a); const x1 = pxOf(b), y1 = pyOf(b);
+    const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+    let err = dx + dy; const out = [];
+    for (;;) {
+      out.push(y0 * PF_COLS + x0);
+      if (x0 === x1 && y0 === y1) break;
+      const e2 = 2 * err;
+      if (e2 >= dy) { err += dy; x0 += sx; }
+      if (e2 <= dx) { err += dx; y0 += sy; }
+    }
+    return out;
+  }
+
+  function makeMaze() {
+    const nw = new Uint8Array(PF_N).fill(1);
+    const id = (x, y) => y * PF_COLS + x;
+    const stack = [[1, 1]]; nw[id(1, 1)] = 0;
+    while (stack.length) {
+      const [x, y] = stack[stack.length - 1];
+      const opts = [[2, 0], [-2, 0], [0, 2], [0, -2]].filter(([dx, dy]) => {
+        const nx = x + dx, ny = y + dy;
+        return nx > 0 && ny > 0 && nx < PF_COLS - 1 && ny < PF_ROWS - 1 && nw[id(nx, ny)];
+      });
+      if (!opts.length) { stack.pop(); continue; }
+      const [dx, dy] = opts[(Math.random() * opts.length) | 0];
+      nw[id(x + dx / 2, y + dy / 2)] = 0; nw[id(x + dx, y + dy)] = 0;
+      stack.push([x + dx, y + dy]);
+    }
+    // knock out some walls so there are loops (several routes to choose from)
+    for (let y = 1; y < PF_ROWS - 1; y++) for (let x = 1; x < PF_COLS - 1; x++) {
+      const i = id(x, y);
+      if (!nw[i] || Math.random() > 0.14) continue;
+      if ((!nw[i - 1] && !nw[i + 1]) || (!nw[i - PF_COLS] && !nw[i + PF_COLS])) nw[i] = 0;
+    }
+    // last column (x = 39) sits outside the odd lattice: open it beside open cells
+    for (let y = 1; y < PF_ROWS - 1; y++) if (!nw[id(PF_COLS - 3, y)] && Math.random() < 0.5) { nw[id(PF_COLS - 2, y)] = 0; }
+    const nearestOpen = from => {
+      let best = -1, bd = Infinity;
+      for (let i = 0; i < PF_N; i++) if (!nw[i]) { const d = manhattan(i, from); if (d < bd) { bd = d; best = i; } }
+      return best;
+    };
+    const ns = nearestOpen(W.start); let ng = nearestOpen(W.goal);
+    if (ng === ns) ng = nearestOpen(id(PF_COLS - 3, PF_ROWS - 2));
+    W.start = ns; W.goal = ng;
+    const sx = pxOf(ns), sy = pyOf(ns);
+    for (let i = 0; i < PF_N; i++) {
+      const was = W.wall[i];
+      W.wall[i] = nw[i]; W.mud[i] = 0;
+      if (nw[i] && !was) vWall[i] = -Math.hypot(pxOf(i) - sx, pyOf(i) - sy) * 0.045; // ripple in from the start
+    }
+    pending.clear();
+    restart();
+    Status.set(`New maze — ${NAME[algo]} starts a fresh search. Then try knocking out a wall mid-run.`, 2400);
+  }
+
+  function clearWalls() {
+    let any = false;
+    for (let i = 0; i < PF_N; i++) if (W.wall[i] || W.mud[i]) any = setCell(i, 0, 0) || any;
+    if (any) { applyPending(); Status.set(`Walls cleared — ${NAME[algo]} keeps its explored cells and pushes into the new space`, 2400); }
+  }
+
+  /* ---------- input ---------- */
+  const cellAt = p => {
+    const x = Math.floor((p.x - ox) / cell), y = Math.floor((p.y - oy) / cell);
+    return x < 0 || y < 0 || x >= PF_COLS || y >= PF_ROWS ? -1 : y * PF_COLS + x;
+  };
+  function markerAt(p) {
+    let best = null, bd = cell * 0.85;
+    for (const which of ['goal', 'start']) {
+      const m = mk[which];
+      const d = Math.hypot(p.x - (ox + m.x * cell), p.y - (oy + m.y * cell));
+      if (d < bd) { bd = d; best = which; }
+    }
+    return best;
+  }
+  pointerize(cv, {
+    down(p) {
+      const m = markerAt(p);
+      if (m) { drag = { mode: m, px: (p.x - ox) / cell, py: (p.y - oy) / cell }; cv.style.cursor = 'grabbing'; return; }
+      const i = cellAt(p); if (i < 0) return;
+      let wl = 0, md = 0;
+      if (brush === 'wall') wl = W.wall[i] ? 0 : 1;
+      else if (brush === 'mud') md = W.mud[i] && !W.wall[i] ? 0 : 1;
+      drag = { mode: 'paint', wl, md, last: i };
+      setCell(i, wl, md);
+    },
+    move(p) {
+      if (!drag) return;
+      if (drag.mode === 'paint') {
+        const i = cellAt(p);
+        if (i >= 0 && i !== drag.last) { for (const c of cellsOnLine(drag.last, i)) setCell(c, drag.wl, drag.md); drag.last = i; }
+      } else {
+        drag.px = clamp((p.x - ox) / cell, 0.3, PF_COLS - 0.3);
+        drag.py = clamp((p.y - oy) / cell, 0.3, PF_ROWS - 0.3);
+        moveMarker(drag.mode, cellAt(p));
+      }
+    },
+    up() { drag = null; cv.style.cursor = ''; },
+    hover(p) { hoverMarker = markerAt(p); cv.style.cursor = hoverMarker ? 'grab' : 'crosshair'; },
+    leave() { hoverMarker = null; }
+  });
+
+  $('#pf-algo').addEventListener('change', e => {
+    algo = e.target.value; makeEngine();
+    inReplan = false; firstSearch = null; pathStale = !!pathShown; noPath = false;
+    Status.set(`Switched to ${NAME[algo]} — ${BLURB[algo]}`, 2400);
+  });
+  segmented($('#pf-brush'), v => { brush = v; });
+  $('#pf-maze').addEventListener('click', makeMaze);
+  $('#pf-clear').addEventListener('click', clearWalls);
+
+  /* ---------- layout + drawing ---------- */
+  function resize() {
+    const f = fitCanvas(cv); ctx = f.ctx; cw = f.w; ch = f.h; dpr = f.dpr;
+    const pad = cw < 600 ? 10 : 26;
+    cell = Math.max(4, Math.floor(Math.min((cw - pad * 2) / PF_COLS, (ch - pad * 2) / PF_ROWS)));
+    ox = Math.round((cw - cell * PF_COLS) / 2); oy = Math.round((ch - cell * PF_ROWS) / 2);
+    // cache the empty grid once per size
+    gridCache = document.createElement('canvas');
+    gridCache.width = Math.round(cw * dpr); gridCache.height = Math.round(ch * dpr);
+    const g = gridCache.getContext('2d'); g.scale(dpr, dpr);
+    const gap = Math.max(1, cell * 0.09), r = cell * 0.2;
+    g.fillStyle = rgba(C.cell, 1);
+    for (let y = 0; y < PF_ROWS; y++) for (let x = 0; x < PF_COLS; x++) {
+      roundRect(g, ox + x * cell + gap / 2, oy + y * cell + gap / 2, cell - gap, cell - gap, r); g.fill();
+    }
+  }
+
+  function updateVisuals(dt) {
+    let mg = 1, front = 0;
+    for (let i = 0; i < PF_N; i++) {
+      const w = W.wall[i];
+      if (w && vWall[i] < 0) vWall[i] += dt * 1.6; // waiting for the maze ripple to arrive
+      else vWall[i] = damp(vWall[i], w ? 1 : 0, w ? 18 : 12, dt);
+      vMud[i] = damp(vMud[i], W.mud[i] && !w ? 1 : 0, 12, dt);
+      const fr = engine.frontier(i), vis = fr || engine.visited(i);
+      if (fr) front++;
+      vVis[i] = damp(vVis[i], vis ? 1 : 0, vis ? 14 : 4, dt);
+      vFront[i] = damp(vFront[i], fr ? 1 : 0, fr ? 16 : 7, dt);
+      const gg = engine.gOf(i);
+      if (gg < Infinity) { vG[i] = gg; if (gg > mg) mg = gg; }
+      if (flash[i] > 0) flash[i] = Math.max(0, flash[i] - dt * 2.5);
+    }
+    maxG = damp(maxG, mg, 4, dt);
+    // markers glide; while dragged they follow the finger, then settle on the cell
+    for (const which of ['start', 'goal']) {
+      const m = mk[which], i = W[which];
+      let tx = pxOf(i) + 0.5, ty = pyOf(i) + 0.5;
+      if (drag && drag.mode === which) { tx = drag.px; ty = drag.py; }
+      m.x = damp(m.x, tx, 22, dt); m.y = damp(m.y, ty, 22, dt);
+      const big = (drag && drag.mode === which) ? 1.25 : hoverMarker === which ? 1.12 : 1;
+      m.s = damp(m.s, big, 16, dt);
+    }
+    // path reveal + fade
+    const target = !pathShown || noPath ? 0 : pathStale ? 0.28 : 1;
+    pathAlpha = damp(pathAlpha, target, 8, dt);
+    if (pathShown && !pathStale) pathReveal = Math.min(pathLen, pathReveal + dt * (30 + pathLen * 1.4));
+    return front;
+  }
+
+  function cellRect(i, scale) {
+    const gap = Math.max(1, cell * 0.09), sz = (cell - gap) * scale;
+    const cx = ox + (pxOf(i) + 0.5) * cell, cy = oy + (pyOf(i) + 0.5) * cell;
+    return [cx - sz / 2, cy - sz / 2, sz];
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, cw, ch);
+    if (gridCache) ctx.drawImage(gridCache, 0, 0, cw, ch);
+    const r = cell * 0.2;
+    for (let i = 0; i < PF_N; i++) {
+      if (vMud[i] > 0.01) {
+        const [x, y, s] = cellRect(i, 0.7 + 0.3 * vMud[i]);
+        ctx.fillStyle = rgba(C.mud, vMud[i]); roundRect(ctx, x, y, s, s, r); ctx.fill();
+      }
+      if (vVis[i] > 0.01) {
+        const gn = clamp(vG[i] / Math.max(1, maxG), 0, 1);
+        const col = mix(C.acc, C.accDeep, gn);
+        const [x, y, s] = cellRect(i, 0.82 + 0.18 * vVis[i]);
+        ctx.fillStyle = rgba(col, vVis[i] * (0.42 - 0.16 * gn) * (W.mud[i] ? 0.8 : 1));
+        roundRect(ctx, x, y, s, s, r); ctx.fill();
+      }
+      if (vFront[i] > 0.01) {
+        const [x, y, s] = cellRect(i, 0.5 + 0.38 * vFront[i]);
+        ctx.fillStyle = rgba(C.acc, 0.88 * vFront[i]); roundRect(ctx, x, y, s, s, r * 0.8); ctx.fill();
+      }
+      if (flash[i] > 0.01) {
+        const [x, y, s] = cellRect(i, 1 + 0.25 * (1 - flash[i]));
+        ctx.strokeStyle = `rgba(255,255,255,${flash[i] * 0.9})`; ctx.lineWidth = 1.5;
+        roundRect(ctx, x, y, s, s, r); ctx.stroke();
+      }
+      const vw = vWall[i];
+      if (vw > 0.01) {
+        const k = clamp(vw, 0, 1), sc = 0.4 + 0.6 * (1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2)); // back-ease pop
+        const [x, y, s] = cellRect(i, Math.min(1.08, sc));
+        ctx.fillStyle = rgba(C.wall, k); roundRect(ctx, x, y, s, s, r); ctx.fill();
+        ctx.fillStyle = rgba(C.wallTop, k * 0.55); roundRect(ctx, x, y, s, s * 0.35, r); ctx.fill();
+      }
+    }
+    drawPath();
+    drawMarker(mk.goal, C.goal, true);
+    drawMarker(mk.start, C.start, false);
+  }
+
+  function drawPath() {
+    if (!pathPts || pathAlpha < 0.01 || pathPts.length < 2) return;
+    const upto = pathStale ? pathLen : pathReveal;
+    const full = Math.floor(upto), frac = upto - full;
+    ctx.save();
+    ctx.beginPath();
+    const P = k => [ox + pathPts[k][0] * cell, oy + pathPts[k][1] * cell];
+    let [x0, y0] = P(0); ctx.moveTo(x0, y0);
+    for (let k = 1; k <= full && k < pathPts.length; k++) { const [x, y] = P(k); ctx.lineTo(x, y); }
+    if (full + 1 < pathPts.length && frac > 0) {
+      const [ax, ay] = P(full), [bx, by] = P(full + 1);
+      ctx.lineTo(lerp(ax, bx, frac), lerp(ay, by, frac));
+    }
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.globalAlpha = pathAlpha;
+    ctx.shadowColor = rgba(C.acc, 0.9); ctx.shadowBlur = cell * 0.7;
+    ctx.strokeStyle = rgba(C.path, 1); ctx.lineWidth = cell * 0.3; ctx.stroke();
+    ctx.shadowBlur = 0;
+    // little dots flowing toward the goal
+    ctx.setLineDash([0.1, cell * 0.95]); ctx.lineDashOffset = -time * cell * 3.2;
+    ctx.strokeStyle = rgba(C.accDeep, 0.9); ctx.lineWidth = cell * 0.13; ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawMarker(m, col, isGoal) {
+    const x = ox + m.x * cell, y = oy + m.y * cell, R = cell * 0.4 * m.s;
+    ctx.save();
+    ctx.shadowColor = rgba(col, 0.9); ctx.shadowBlur = cell * 0.8;
+    ctx.fillStyle = rgba(col, 1);
+    ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    if (isGoal) {
+      const pulse = (time * 0.9) % 1;
+      ctx.strokeStyle = rgba(col, 0.6 * (1 - pulse)); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, R * (1.1 + pulse * 0.9), 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#1b0f14'; ctx.beginPath(); ctx.arc(x, y, R * 0.58, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = rgba(col, 1); ctx.beginPath(); ctx.arc(x, y, R * 0.3, 0, Math.PI * 2); ctx.fill();
+    } else {
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(x, y, R * 0.34, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /* ---------- stats ---------- */
+  const el = { ex: $('#pf-explored'), fr: $('#pf-frontier'), len: $('#pf-len'), cost: $('#pf-cost'), rp: $('#pf-replans') };
+  const shown = {};
+  function put(k, v) { if (shown[k] !== v) { shown[k] = v; el[k].textContent = v; } }
+
+  function frame(dt) {
+    time += dt;
+    applyPending();
+    if (playing && !engine.finished) {
+      acc += dt * SPS[mod.speed - 1];
+      let n = Math.min(Math.floor(acc), 5000); acc -= n;
+      while (n-- > 0 && !engine.finished) doStep();
+    } else acc = 0;
+    if (engine.finished && !pathStale && pathShown && !drag) {
+      const len = pathShown.length - 1, cost = pathCost();
+      Status.set(`Path: ${len} steps${cost !== len ? `, cost ${cost}` : ''}. Draw walls, paint mud or drag the markers — it re-plans live.`);
+    } else if (!playing) Status.set('Paused. Edit freely, then press play or step to continue.');
+    const front = updateVisuals(dt);
+    draw();
+    put('ex', fmt(engine.expanded)); put('fr', fmt(front));
+    const live = pathShown && !noPath;
+    put('len', live ? fmt(pathShown.length - 1) : '–'); put('cost', live ? fmt(pathCost()) : '–');
+    put('rp', fmt(replans));
+  }
+
+  /* ---------- initial scene ---------- */
+  for (let y = 4; y <= 20; y++) W.wall[y * PF_COLS + 20] = 1;
+  for (let y = 0; y <= 7; y++) W.wall[y * PF_COLS + 27] = 1;
+  for (let y = 17; y < PF_ROWS; y++) W.wall[y * PF_COLS + 27] = 1;
+  for (let y = 9; y <= 15; y++) for (let x = 24; x <= 26; x++) W.mud[y * PF_COLS + x] = 1;
+  for (let i = 0; i < PF_N; i++) { vWall[i] = W.wall[i]; vMud[i] = W.mud[i]; }
+  for (const which of ['start', 'goal']) { mk[which].x = pxOf(W[which]) + 0.5; mk[which].y = pyOf(W[which]) + 0.5; }
+  makeEngine();
+
+  return mod;
+})();
+App.register('path', PF);
+
+/* ================================================================
+   NEURAL NET — a tiny MLP written from scratch
+   (2 inputs -> 1 or 2 tanh hidden layers -> sigmoid output,
+    binary cross-entropy, full-batch Adam)
+   Mid-run edits need no special handling: the net trains continuously,
+   so moving a point just changes the data the next step fits.
+   ================================================================ */
+const NN = (() => {
+  const cv = $('#cv-nn');
+  const CA = [255, 107, 139], CB = [69, 200, 245], ACC = [185, 140, 255], BG = [15, 18, 26];
+  const SPF = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32];
+  const PRESET_NAME = { blobs: 'two blobs', circles: 'circle inside a circle', spiral: 'spiral', xor: 'XOR' };
+
+  let ctx, cw = 0, ch = 0, dpr = 1, cx = 0, cy = 0, sc = 1;
+  let points = [], ghosts = [];
+  let playing = true, lr = 0.03, hidden = 8, layers = 2, steps = 0, loss = NaN, accu = 0;
+  let net = null, addClass = 0, drag = null, hover = -1, time = 0;
+  let ev = { kind: null, t: -1e9, wrong: false, name: '' };
+  const lossHist = []; let lossMax = 0.8;
+  let GW = 84, GH = 52, field = null, off = null, offCtx = null, img = null;
+
+  /* ---------- network ---------- */
+  const randn = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  function makeNet(sizes, old) {
+    const L = sizes.length - 1;
+    const n = { sizes, L, W: [], b: [], gW: [], gb: [], mW: [], vW: [], mb: [], vb: [], a: [], d: [], t: 0 };
+    for (let l = 0; l < L; l++) {
+      const nin = sizes[l], nout = sizes[l + 1], w = new Float64Array(nin * nout);
+      const sd = Math.sqrt(1 / nin) * (l === 0 ? 1.6 : 1.1);
+      for (let k = 0; k < w.length; k++) w[k] = randn() * sd;
+      n.W.push(w); n.b.push(new Float64Array(nout));
+      for (const key of ['gW', 'mW', 'vW']) n[key].push(new Float64Array(nin * nout));
+      for (const key of ['gb', 'mb', 'vb']) n[key].push(new Float64Array(nout));
+    }
+    for (let l = 0; l <= L; l++) { n.a.push(new Float64Array(sizes[l])); n.d.push(new Float64Array(sizes[l])); }
+    // keep whatever learned weights still fit, so resizing doesn't throw the boundary away
+    if (old && old.L === L) {
+      for (let l = 0; l < L; l++) {
+        const nin = sizes[l], nout = sizes[l + 1], oin = old.sizes[l], oout = old.sizes[l + 1];
+        for (let j = 0; j < nout; j++) {
+          if (j < oout) n.b[l][j] = old.b[l][j];
+          for (let i = 0; i < nin; i++) {
+            if (j < oout && i < oin) n.W[l][j * nin + i] = old.W[l][j * oin + i];
+            else if (i >= oin) n.W[l][j * nin + i] *= 0.08; // new units start nearly silent
+          }
+        }
+      }
+    } else if (old && old.L !== L) {
+      const nin = sizes[0], nout = sizes[1], oout = old.sizes[1];
+      for (let j = 0; j < Math.min(nout, oout); j++) { n.b[0][j] = old.b[0][j]; for (let i = 0; i < nin; i++) n.W[0][j * nin + i] = old.W[0][j * nin + i]; }
+    }
+    return n;
+  }
+  const sizesNow = () => layers === 2 ? [2, hidden, hidden, 1] : [2, hidden, 1];
+
+  function forward(x, y) {
+    const n = net; n.a[0][0] = x; n.a[0][1] = y;
+    for (let l = 0; l < n.L; l++) {
+      const nin = n.sizes[l], nout = n.sizes[l + 1], W = n.W[l], b = n.b[l], ai = n.a[l], ao = n.a[l + 1];
+      const last = l === n.L - 1;
+      for (let j = 0; j < nout; j++) {
+        let s = b[j]; const o = j * nin;
+        for (let i = 0; i < nin; i++) s += W[o + i] * ai[i];
+        ao[j] = last ? 1 / (1 + Math.exp(-s)) : Math.tanh(s);
+      }
+    }
+    return n.a[n.L][0];
+  }
+
+  function trainStep() {
+    const n = net, m = points.length;
+    if (m === 0) return;
+    for (let l = 0; l < n.L; l++) { n.gW[l].fill(0); n.gb[l].fill(0); }
+    let ls = 0, ok = 0;
+    for (const p of points) {
+      const out = forward(p.x, p.y), y = p.c;
+      ls -= y * Math.log(out + 1e-9) + (1 - y) * Math.log(1 - out + 1e-9);
+      if ((out > 0.5) === (y === 1)) ok++;
+      n.d[n.L][0] = out - y;
+      for (let l = n.L - 1; l >= 0; l--) {
+        const nin = n.sizes[l], nout = n.sizes[l + 1], W = n.W[l], ai = n.a[l], dn = n.d[l + 1], gW = n.gW[l], gb = n.gb[l];
+        for (let j = 0; j < nout; j++) { gb[j] += dn[j]; const o = j * nin; for (let i = 0; i < nin; i++) gW[o + i] += dn[j] * ai[i]; }
+        if (l > 0) {
+          const di = n.d[l];
+          for (let i = 0; i < nin; i++) {
+            let s = 0; for (let j = 0; j < nout; j++) s += W[j * nin + i] * dn[j];
+            di[i] = s * (1 - ai[i] * ai[i]);
+          }
+        }
+      }
+    }
+    // Adam
+    n.t++;
+    const b1 = 0.9, b2 = 0.999, c1 = 1 - Math.pow(b1, n.t), c2 = 1 - Math.pow(b2, n.t), inv = 1 / m;
+    const upd = (P, G, M, V) => {
+      for (let k = 0; k < P.length; k++) {
+        const g = G[k] * inv;
+        M[k] = b1 * M[k] + (1 - b1) * g; V[k] = b2 * V[k] + (1 - b2) * g * g;
+        P[k] -= lr * (M[k] / c1) / (Math.sqrt(V[k] / c2) + 1e-8);
+      }
+    };
+    for (let l = 0; l < n.L; l++) { upd(n.W[l], n.gW[l], n.mW[l], n.vW[l]); upd(n.b[l], n.gb[l], n.mb[l], n.vb[l]); }
+    loss = ls * inv; accu = ok * inv; steps++;
+  }
+
+  /* ---------- datasets ---------- */
+  function dataset(kind) {
+    const P = [], rnd = Math.random;
+    if (kind === 'blobs') for (let i = 0; i < 140; i++) {
+      const c = i % 2, mx = c ? 0.45 : -0.45, my = c ? -0.32 : 0.32;
+      P.push({ x: mx + randn() * 0.2, y: my + randn() * 0.2, c });
+    } else if (kind === 'circles') for (let i = 0; i < 160; i++) {
+      const c = i % 2, th = rnd() * Math.PI * 2, r = c ? Math.sqrt(rnd()) * 0.36 : 0.62 + rnd() * 0.28;
+      P.push({ x: Math.cos(th) * r, y: Math.sin(th) * r, c });
+    } else if (kind === 'spiral') for (let i = 0; i < 90; i++) for (let c = 0; c < 2; c++) {
+      const t = i / 90, r = 0.06 + t * 0.86, th = t * Math.PI * 3.1 + c * Math.PI;
+      P.push({ x: Math.cos(th) * r + randn() * 0.022, y: Math.sin(th) * r + randn() * 0.022, c });
+    } else for (let i = 0; i < 160; i++) {
+      let x, y; do { x = rnd() * 1.8 - 0.9; y = rnd() * 1.8 - 0.9; } while (Math.abs(x) < 0.07 || Math.abs(y) < 0.07);
+      P.push({ x, y, c: x * y > 0 ? 0 : 1 });
+    }
+    return P;
+  }
+  function loadPreset(kind, quiet) {
+    const np = dataset(kind);
+    np.forEach((p, k) => {
+      const o = points[k];
+      p.dx = o ? o.dx : p.x; p.dy = o ? o.dy : p.y; p.col = o ? o.col : p.c; p.a = o ? o.a : 0;
+    });
+    for (let k = np.length; k < points.length; k++) ghosts.push(points[k]);
+    points = np;
+    if (!quiet) { ev = { kind: 'preset', t: time, name: PRESET_NAME[kind] }; Status.clearHold(); }
+  }
+
+  /* ---------- input ---------- */
+  const toWorld = p => ({ x: clamp((p.x - cx) / sc, -cw / 2 / sc + 0.02, cw / 2 / sc - 0.02), y: clamp(-(p.y - cy) / sc, -ch / 2 / sc + 0.02, ch / 2 / sc - 0.02) });
+  function hit(p) {
+    let best = -1, bd = p.type === 'touch' ? 24 : 15;
+    points.forEach((q, k) => { const d = Math.hypot(cx + q.dx * sc - p.x, cy - q.dy * sc - p.y); if (d < bd) { bd = d; best = k; } });
+    return best;
+  }
+  pointerize(cv, {
+    down(p) {
+      const k = hit(p);
+      if (k >= 0) { drag = { k, moved: false }; cv.style.cursor = 'grabbing'; return; }
+      const w = toWorld(p), c = p.shift ? 1 - addClass : addClass;
+      const wrong = net && points.length ? (forward(w.x, w.y) > 0.5) !== (c === 1) : false;
+      points.push({ x: w.x, y: w.y, dx: w.x, dy: w.y, c, col: c, a: 0 });
+      drag = { k: points.length - 1, moved: false, added: true };
+      ev = { kind: 'add', t: time, wrong, cls: c };
+      Status.clearHold();
+    },
+    move(p) {
+      if (!drag) return;
+      const q = points[drag.k]; if (!q) return;
+      const w = toWorld(p); q.x = w.x; q.y = w.y;
+      if (!drag.added || drag.moved || Math.hypot(q.x - q.dx, q.y - q.dy) > 0.02) drag.moved = true;
+      if (drag.moved) ev = { kind: 'drag', t: time };
+    },
+    up() { if (drag && drag.moved) ev = { kind: 'released', t: time }; drag = null; cv.style.cursor = ''; },
+    context(p) {
+      const k = hit(p); if (k < 0) return;
+      ghosts.push(points.splice(k, 1)[0]);
+      Status.set('Point removed — the boundary relaxes now that it has one less point to fit', 2000);
+    },
+    hover(p) { hover = hit(p); cv.style.cursor = hover >= 0 ? 'grab' : 'crosshair'; },
+    leave() { hover = -1; }
+  });
+
+  for (const b of $$('#nn-presets button')) b.addEventListener('click', () => loadPreset(b.dataset.v));
+  segmented($('#nn-class'), v => { addClass = +v; });
+  const lrEl = $('#nn-lr'), huEl = $('#nn-hu');
+  const lrFrom = v => Math.pow(10, -3 + 2.7 * v / 100);
+  lrEl.addEventListener('input', () => {
+    lr = lrFrom(+lrEl.value); $('#nn-lr-v').textContent = lr < 0.01 ? lr.toFixed(4) : lr.toFixed(3);
+    Status.set(lr > 0.15 ? `Learning rate ${lr.toFixed(2)} — big steps: fast, but the boundary may wobble`
+      : lr < 0.005 ? `Learning rate ${lr.toFixed(4)} — tiny careful steps, so the boundary moves slowly`
+      : `Learning rate ${lr.toFixed(3)} — how far each training step moves the weights`, 1800);
+  });
+  huEl.addEventListener('input', () => {
+    const nh = +huEl.value; if (nh === hidden) return;
+    const grew = nh > hidden; hidden = nh; $('#nn-hu-v').textContent = nh;
+    net = makeNet(sizesNow(), net);
+    Status.set(grew ? `${nh} hidden units — kept the learned weights; new units start almost silent and join in`
+      : `${nh} hidden units — dropped some units; the rest keep their weights and make up the difference`, 2200);
+  });
+  segmented($('#nn-layers'), v => {
+    layers = +v; net = makeNet(sizesNow(), net);
+    Status.set(layers === 2 ? 'Two hidden layers — more room for curvy shapes like the spiral'
+      : 'One hidden layer — simpler, smoother boundaries', 2200);
+  });
+  $('#nn-resetw').addEventListener('click', () => mod.reset());
+  $('#nn-clear').addEventListener('click', () => { ghosts.push(...points); points = []; Status.set('Cleared. Click to add class A, shift-click for class B.', 2000); });
+
+  /* ---------- drawing ---------- */
+  function resize() {
+    const f = fitCanvas(cv); ctx = f.ctx; cw = f.w; ch = f.h; dpr = f.dpr;
+    cx = cw / 2; cy = ch / 2; sc = Math.min(cw, ch) / 2 * 0.86;
+    GW = cw < 600 ? 60 : 88; GH = Math.max(8, Math.round(GW * ch / cw));
+    const nf = new Float32Array(GW * GH).fill(0.5);
+    field = nf;
+    off = document.createElement('canvas'); off.width = GW; off.height = GH;
+    offCtx = off.getContext('2d'); img = offCtx.createImageData(GW, GH);
+  }
+
+  function updateField(dt) {
+    const k = 1 - Math.exp(-14 * dt), d = img.data;
+    for (let gy = 0; gy < GH; gy++) {
+      const wy = -(((gy + 0.5) / GH) * ch - cy) / sc;
+      for (let gx = 0; gx < GW; gx++) {
+        const wx = (((gx + 0.5) / GW) * cw - cx) / sc;
+        const idx = gy * GW + gx;
+        const p = field[idx] += (forward(wx, wy) - field[idx]) * k;
+        const conf = 0.05 + Math.pow(Math.abs(p - 0.5) * 2, 0.8) * 0.36;
+        const base = p < 0.5 ? CA : CB, o = idx * 4;
+        d[o] = BG[0] + (base[0] - BG[0]) * conf;
+        d[o + 1] = BG[1] + (base[1] - BG[1]) * conf;
+        d[o + 2] = BG[2] + (base[2] - BG[2]) * conf;
+        d[o + 3] = 255;
+      }
+    }
+    offCtx.putImageData(img, 0, 0);
+  }
+
+  function drawBoundary() {
+    const sx = cw / GW, sy = ch / GH;
+    ctx.beginPath();
+    const P = (gx, gy) => [(gx + 0.5) * sx, (gy + 0.5) * sy];
+    for (let gy = 0; gy < GH - 1; gy++) for (let gx = 0; gx < GW - 1; gx++) {
+      const a = field[gy * GW + gx], b = field[gy * GW + gx + 1], c = field[(gy + 1) * GW + gx + 1], d = field[(gy + 1) * GW + gx];
+      const code = (a > 0.5) * 8 + (b > 0.5) * 4 + (c > 0.5) * 2 + (d > 0.5);
+      if (code === 0 || code === 15) continue;
+      const [x0, y0] = P(gx, gy);
+      const T = () => [x0 + (0.5 - a) / (b - a) * sx, y0];
+      const R = () => [x0 + sx, y0 + (0.5 - b) / (c - b) * sy];
+      const B = () => [x0 + (0.5 - d) / (c - d) * sx, y0 + sy];
+      const L = () => [x0, y0 + (0.5 - a) / (d - a) * sy];
+      const seg = (p, q) => { ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); };
+      switch (code) {
+        case 1: case 14: seg(L(), B()); break;
+        case 2: case 13: seg(B(), R()); break;
+        case 3: case 12: seg(L(), R()); break;
+        case 4: case 11: seg(T(), R()); break;
+        case 6: case 9: seg(T(), B()); break;
+        case 7: case 8: seg(T(), L()); break;
+        case 5: seg(T(), L()); seg(B(), R()); break;
+        case 10: seg(T(), R()); seg(L(), B()); break;
+      }
+    }
+    ctx.save();
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = rgba(ACC, 0.5); ctx.lineWidth = 7; ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.92)'; ctx.lineWidth = 2.2; ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawPoint(q, k, alpha) {
+    const X = cx + q.dx * sc, Y = cy - q.dy * sc;
+    const big = drag && drag.k === k ? 1.45 : hover === k ? 1.25 : 1;
+    q.s = q.s === undefined ? big : q.s + (big - q.s) * 0.25;
+    const r = (cw < 600 ? 5.5 : 7) * q.s * (0.4 + 0.6 * Math.min(1, q.a));
+    const col = mix(CA, CB, q.col);
+    ctx.globalAlpha = alpha;
+    if (q.wrong) { // misclassified points get a soft pulsing halo
+      ctx.strokeStyle = rgba(col, 0.55 + 0.3 * Math.sin(time * 5));
+      ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(X, Y, r + 5, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.fillStyle = rgba(col, 1); ctx.beginPath(); ctx.arc(X, Y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.8; ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  function drawLossChart() {
+    const small = cw < 600, w = small ? 150 : 220, h = small ? 66 : 92, m = small ? 10 : 16;
+    const x = cw - w - m, y = ch - h - m;
+    ctx.save();
+    ctx.fillStyle = 'rgba(9,11,16,0.78)'; roundRect(ctx, x, y, w, h, 12); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#596174'; ctx.font = `650 ${small ? 10 : 11}px ${getComputedStyle(document.body).fontFamily}`;
+    ctx.fillText('LOSS', x + 12, y + 18);
+    ctx.fillStyle = '#e8ebf2'; ctx.textAlign = 'right';
+    ctx.fillText(isFinite(loss) ? loss.toFixed(3) : '–', x + w - 12, y + 18); ctx.textAlign = 'left';
+    if (lossHist.length > 1) {
+      const px0 = x + 12, pw = w - 24, py0 = y + 26, ph = h - 36, nH = lossHist.length;
+      ctx.beginPath();
+      lossHist.forEach((v, i) => {
+        const X = px0 + (i / (260 - 1)) * pw, Y = py0 + ph * (1 - clamp(v / lossMax, 0, 1));
+        i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+      });
+      ctx.strokeStyle = rgba(ACC, 1); ctx.lineWidth = 2; ctx.lineJoin = 'round'; ctx.stroke();
+      ctx.lineTo(px0 + ((nH - 1) / 259) * pw, py0 + ph); ctx.lineTo(px0, py0 + ph); ctx.closePath();
+      const gr = ctx.createLinearGradient(0, py0, 0, py0 + ph);
+      gr.addColorStop(0, rgba(ACC, 0.3)); gr.addColorStop(1, rgba(ACC, 0));
+      ctx.fillStyle = gr; ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /* ---------- status ---------- */
+  function statusLine() {
+    const since = time - ev.t, nA = points.filter(p => p.c === 0).length, nB = points.length - nA;
+    if (!points.length) return 'Click to add a class A point, shift-click (or use the toggle) for class B — or pick a dataset';
+    if (!nA || !nB) return 'Add some points of the other class so the net has two things to tell apart';
+    if (ev.kind === 'drag') return 'The net is moving the boundary to fit the point you moved';
+    if (ev.kind === 'add' && since < 1.8) return ev.wrong
+      ? `That ${ev.cls ? 'blue' : 'pink'} point landed on the wrong side — the net is bending the boundary to include it`
+      : `That ${ev.cls ? 'blue' : 'pink'} point already lands on its own side, so the boundary barely needs to move`;
+    if (ev.kind === 'released' && since < 1.6) return 'Point dropped — the boundary is settling around its new spot';
+    if (ev.kind === 'preset' && since < 2.6) return `New dataset: ${ev.name} — the net is unlearning the old shape and fitting the new one`;
+    if (!playing) return 'Paused — the boundary is frozen. Press play to keep training, or step one update at a time.';
+    if (!isFinite(loss)) return 'Training…';
+    const pct = Math.round(accu * 100);
+    if (accu >= 1 && loss < 0.08) return `Converged — every point is on its own side (loss ${loss.toFixed(3)}). Drag one across and watch it adapt`;
+    if (loss > 0.45) return `The net is still finding the shape — loss ${loss.toFixed(3)} and falling`;
+    return `Training: ${pct}% of points are on the right side; the boundary is tightening (loss ${loss.toFixed(3)})`;
+  }
+
+  /* ---------- module ---------- */
+  const el = { loss: $('#nn-loss'), acc: $('#nn-acc'), steps: $('#nn-steps'), pts: $('#nn-pts') };
+  let statT = 0;
+  function frame(dt) {
+    time += dt;
+    if (playing && points.length) { for (let s = SPF[mod.speed - 1]; s > 0; s--) trainStep(); pushLoss(); }
+    for (const q of points) {
+      const k = drag && points[drag.k] === q ? 40 : 7;
+      q.dx = damp(q.dx, q.x, k, dt); q.dy = damp(q.dy, q.y, k, dt);
+      q.col = damp(q.col, q.c, 6, dt); q.a = damp(q.a, 1, 9, dt);
+    }
+    for (const g of ghosts) g.a = damp(g.a, 0, 10, dt);
+    ghosts = ghosts.filter(g => g.a > 0.02);
+    updateField(dt);
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(off, 0, 0, GW, GH, 0, 0, cw, ch);
+    drawBoundary();
+    for (const g of ghosts) drawPoint(g, -1, g.a);
+    points.forEach((q, k) => drawPoint(q, k, 1));
+    drawLossChart();
+    lossMax = damp(lossMax, Math.max(0.05, ...lossHist.slice(-260)) * 1.1, 3, dt);
+    Status.set(statusLine());
+    if (time - statT > 0.1) {
+      statT = time;
+      for (const q of points) q.wrong = (forward(q.x, q.y) > 0.5) !== (q.c === 1);
+      el.loss.textContent = isFinite(loss) ? loss.toFixed(3) : '–';
+      el.acc.textContent = isFinite(loss) ? Math.round(accu * 100) + '%' : '–';
+      el.steps.textContent = fmt(steps); el.pts.textContent = points.length;
+    }
+  }
+  function pushLoss() { if (isFinite(loss)) { lossHist.push(loss); if (lossHist.length > 260) lossHist.shift(); } }
+
+  const mod = {
+    canvas: cv, speed: 5,
+    get playing() { return playing; },
+    setPlaying(b) { playing = b; },
+    step() { trainStep(); pushLoss(); Status.set(`One training step: nudged every weight downhill (loss ${isFinite(loss) ? loss.toFixed(3) : '–'})`, 1600); },
+    reset() {
+      net = makeNet(sizesNow()); steps = 0; loss = NaN; lossHist.length = 0;
+      Status.set('Weights randomised — watch the net learn the boundary from scratch', 2000);
+    },
+    resize, frame, activate() {}
+  };
+
+  lr = lrFrom(+lrEl.value); $('#nn-lr-v').textContent = lr.toFixed(3);
+  net = makeNet(sizesNow());
+  loadPreset('spiral', true);
+  for (const p of points) p.a = 1;
+  return mod;
+})();
+App.register('nn', NN);
+
+/* ================================================================
+   SORTING — every algorithm is a generator that yields after each
+   compare or swap. Generators re-read the array after every yield and
+   check an edit stamp, so they react to the user's changes:
+    - bubble / insertion / selection recompute how much of their
+      "already sorted" region is still trustworthy and carry on;
+    - quicksort redoes the current partition if the edit touches it;
+    - merge sort (in-place, so the array is always a real permutation)
+      redoes the current merge and re-sorts any run the edit broke;
+    - a final check re-sorts the shortest out-of-order stretch, so
+      edits that land in already-finished sections are also fixed.
+   ================================================================ */
+const SORT = (() => {
+  const cv = $('#cv-sort');
+  const N = 50;
+  const ACC = [251, 191, 36], SWAPC = [255, 247, 224], PIV = [244, 114, 182];
+  const LO = [52, 60, 80], HI = [92, 104, 132], DONE = [124, 100, 40];
+  const SPS = [2, 5, 10, 20, 40, 80, 160, 320, 640, 1500];
+  const NAME = { bubble: 'Bubble sort', insertion: 'Insertion sort', selection: 'Selection sort', quick: 'Quicksort', merge: 'Merge sort' };
+  const BLURB = {
+    bubble: 'it swaps neighbours until the tallest bars bubble to the end',
+    insertion: 'it grows a sorted run on the left, one bar at a time',
+    selection: 'it keeps picking the shortest remaining bar',
+    quick: 'it splits the bars around a pivot, then sorts each side',
+    merge: 'it sorts each half, then merges the two halves'
+  };
+
+  let ctx, cw = 0, ch = 0, ax = 0, ay = 0, aw = 0, ah = 0, slot = 1;
+  let a = [];
+  const done = new Uint8Array(N);
+  let algo = 'quick', gen = null, finished = false, playing = true, acc = 0, time = 0;
+  let comparisons = 0, swaps = 0, msg = '', finishT = -1, sortedDisp = 0;
+  let range = null; const rd = { lo: 0, hi: 0, a: 0 };
+  let drag = null, hoverId = -1, hoverTop = false;
+  const E = { lo: Infinity, hi: -Infinity };
+
+  /* ---------- edit tracking ---------- */
+  function noteEdit(lo, hi) {
+    E.lo = Math.min(E.lo, lo); E.hi = Math.max(E.hi, hi);
+    for (let i = lo; i <= hi; i++) done[i] = 0;
+  }
+  function takeEdit() {
+    if (E.lo === Infinity) return null;
+    const r = { lo: E.lo, hi: E.hi }; E.lo = Infinity; E.hi = -Infinity; return r;
+  }
+  const touched = (lo, hi) => { const e = takeEdit(); return !!e && e.hi >= lo && e.lo <= hi; };
+  const say = (t, hold) => { if (hold) Status.set(t, 2200); else msg = t; };
+  const setRange = (lo, hi) => { range = { lo, hi }; };
+
+  /* ---------- primitives ---------- */
+  function C(i, j) { comparisons++; a[i].cmp = 1; a[j].cmp = 1; return 1; }
+  function swap(i, j) { const t = a[i]; a[i] = a[j]; a[j] = t; swaps++; a[i].swp = 1; a[j].swp = 1; }
+  function rotate(from, to) { const el = a.splice(from, 1)[0]; a.splice(to, 0, el); swaps++; el.swp = 1; }
+  function isSortedRange(lo, hi) { for (let i = lo + 1; i < hi; i++) if (a[i - 1].v > a[i].v) return false; return true; }
+  function unsortedSpan() {
+    let l = 0; while (l < N - 1 && a[l].v <= a[l + 1].v) l++;
+    if (l === N - 1) return null;
+    let r = N - 1; while (r > 0 && a[r - 1].v <= a[r].v) r--;
+    let mn = Infinity, mx = -Infinity;
+    for (let i = l; i <= r; i++) { mn = Math.min(mn, a[i].v); mx = Math.max(mx, a[i].v); }
+    while (l > 0 && a[l - 1].v > mn) l--;
+    while (r < N - 1 && a[r + 1].v < mx) r++;
+    return [l, r];
+  }
+  // last index in [lo,hi] that is NOT yet in its final place at the end
+  function settledTail(lo, hi) {
+    const pm = []; let m = -Infinity;
+    for (let i = lo; i <= hi; i++) { m = Math.max(m, a[i].v); pm[i - lo] = m; }
+    let e = hi;
+    while (e > lo && a[e].v >= pm[e - 1 - lo] && (e === hi || a[e].v <= a[e + 1].v)) e--;
+    for (let i = lo; i <= hi; i++) done[i] = i > e ? 1 : 0;
+    return e;
+  }
+  // first index in [lo,hi] that is NOT yet in its final place at the front
+  function settledHead(lo, hi) {
+    const sm = []; let m = Infinity;
+    for (let i = hi; i >= lo; i--) { m = Math.min(m, a[i].v); sm[i - lo] = m; }
+    let k = lo;
+    while (k < hi && a[k].v <= sm[k + 1 - lo] && (k === lo || a[k - 1].v <= a[k].v)) k++;
+    for (let i = lo; i <= hi; i++) done[i] = i < k ? 1 : 0;
+    return k;
+  }
+  function sortedPrefixEnd(lo, hi) { let k = lo + 1; while (k <= hi && a[k - 1].v <= a[k].v) k++; return k; }
+
+  /* ---------- algorithms (inclusive ranges) ---------- */
+  function* bubble(lo, hi) {
+    let end = hi;
+    outer: while (end > lo) {
+      let swapped = false;
+      setRange(lo, end);
+      for (let j = lo; j < end; j++) {
+        say(`Bubble sort is comparing bars ${j + 1} and ${j + 2} — the taller one moves right`);
+        yield C(j, j + 1);
+        if (takeEdit()) { end = settledTail(lo, hi); say(`You changed the bars — bubble sort restarts its pass, trusting only the ${hi - end} bar${hi - end === 1 ? '' : 's'} at the end that are still in place`, true); continue outer; }
+        if (a[j].v > a[j + 1].v) {
+          swap(j, j + 1); swapped = true;
+          say(`Bubble sort swaps bars ${j + 1} and ${j + 2} — the left one was taller`);
+          yield 1;
+          if (takeEdit()) { end = settledTail(lo, hi); say(`You changed the bars — bubble sort restarts its pass, trusting only the ${hi - end} bar${hi - end === 1 ? '' : 's'} at the end that are still in place`, true); continue outer; }
+        }
+      }
+      done[end] = 1; end--;
+      if (!swapped) { for (let k = lo; k <= end; k++) done[k] = 1; return; }
+    }
+    done[lo] = 1;
+  }
+
+  function* insertion(lo, hi) {
+    let i = lo + 1;
+    while (i <= hi) {
+      let j = i, again = false;
+      setRange(lo, i);
+      while (j > lo) {
+        say(`Insertion sort is sliding bar ${j + 1} left until it meets a shorter neighbour`);
+        yield C(j - 1, j);
+        if (takeEdit()) { again = true; break; }
+        if (a[j - 1].v > a[j].v) {
+          swap(j - 1, j); yield 1;
+          if (takeEdit()) { again = true; break; }
+          j--;
+        } else break;
+      }
+      if (again) {
+        i = Math.max(lo + 1, sortedPrefixEnd(lo, hi));
+        say(`You changed the bars — insertion sort keeps the first ${i - lo} bars that are still in order and carries on from there`, true);
+      } else i++;
+    }
+  }
+
+  function* selection(lo, hi) {
+    let i = lo;
+    while (i < hi) {
+      let m = i, again = false;
+      setRange(i, hi);
+      for (let j = i + 1; j <= hi; j++) {
+        say(`Selection sort is scanning for the shortest remaining bar to put at position ${i + 1}`);
+        a[m].piv = 1;
+        yield C(m, j);
+        if (takeEdit()) { again = true; break; }
+        if (a[j].v < a[m].v) m = j;
+      }
+      if (!again && m !== i) { swap(i, m); say(`Selection sort moves the shortest bar it found into position ${i + 1}`); yield 1; if (takeEdit()) again = true; }
+      if (again) {
+        i = settledHead(lo, hi);
+        say(`You changed the bars — selection sort re-checks which front bars are truly final (${i - lo}) and keeps scanning from there`, true);
+        continue;
+      }
+      done[i] = 1; i++;
+    }
+    done[hi] = 1;
+  }
+
+  function* quick(lo, hi) {
+    if (lo > hi) return;
+    if (lo === hi) { done[lo] = 1; return; }
+    let p;
+    for (;;) {
+      setRange(lo, hi);
+      const mid = (lo + hi) >> 1;
+      if (mid !== hi) {
+        swap(mid, hi);
+        say(`Quicksort picks the middle bar of ${lo + 1}–${hi + 1} as its pivot and parks it at the end`);
+        yield 1;
+        if (touched(lo, hi)) { say(`You changed a bar inside the current partition (bars ${lo + 1}–${hi + 1}) — quicksort is redoing it`, true); continue; }
+      }
+      let store = lo, redo = false;
+      for (let j = lo; j < hi; j++) {
+        a[hi].piv = 1;
+        say(`Quicksort is partitioning bars ${lo + 1}–${hi + 1}: shorter than the pivot goes left, taller stays right`);
+        yield C(j, hi);
+        if (touched(lo, hi)) { redo = true; break; }
+        if (a[j].v < a[hi].v) {
+          if (store !== j) { swap(store, j); yield 1; if (touched(lo, hi)) { redo = true; break; } }
+          store++;
+        }
+      }
+      if (!redo && store !== hi) {
+        swap(store, hi);
+        say(`Quicksort drops the pivot into its final spot, position ${store + 1}`);
+        yield 1;
+        if (touched(lo, hi)) redo = true;
+      }
+      if (redo) { say(`You changed a bar inside the current partition (bars ${lo + 1}–${hi + 1}) — quicksort is redoing it`, true); continue; }
+      p = store; break;
+    }
+    done[p] = 1;
+    yield* quick(lo, p - 1);
+    yield* quick(p + 1, hi);
+  }
+
+  function* msort(lo, hi, adaptive) { // half-open [lo, hi)
+    if (hi - lo < 2) return;
+    if (adaptive && isSortedRange(lo, hi)) return;
+    const mid = (lo + hi) >> 1;
+    yield* msort(lo, mid, adaptive);
+    yield* msort(mid, hi, adaptive);
+    yield* merge(lo, mid, hi);
+  }
+  function* merge(lo, mid, hi) {
+    for (;;) {
+      if (!isSortedRange(lo, mid) || !isSortedRange(mid, hi)) {
+        say('A run you edited is out of order — merge sort re-sorts it before merging', true);
+        yield* msort(lo, mid, true);
+        yield* msort(mid, hi, true);
+        continue;
+      }
+      setRange(lo, hi - 1);
+      let i = lo, j = mid, redo = false;
+      while (i < j && j < hi) {
+        say(`Merge sort is merging two sorted runs: bars ${lo + 1}–${mid} and ${mid + 1}–${hi}`);
+        yield C(i, j);
+        if (touched(lo, hi - 1)) { redo = true; break; }
+        if (a[i].v <= a[j].v) i++;
+        else {
+          rotate(j, i);
+          say(`Merge sort slides bar ${j + 1} into place at ${i + 1} — it was shorter than the rest of the left run`);
+          yield 1;
+          if (touched(lo, hi - 1)) { redo = true; break; }
+          i++; j++;
+        }
+      }
+      if (!redo) return;
+      say(`You changed a bar inside the current merge (bars ${lo + 1}–${hi}) — merge sort is redoing it`, true);
+      mid = clamp(j, lo + 1, hi - 1); // the two sorted pieces now meet at j
+    }
+  }
+
+  const CORE = { bubble, insertion, selection, quick, merge: (lo, hi) => msort(lo, hi + 1, false) };
+
+  function* run() {
+    yield* CORE[algo](0, N - 1);
+    for (let guard = 0; guard < 100; guard++) {
+      const sp = unsortedSpan();
+      if (!sp) return;
+      takeEdit(); done.fill(0);
+      say(`Some bars you moved landed in a finished section — ${NAME[algo]} goes back and re-sorts bars ${sp[0] + 1}–${sp[1] + 1}`, true);
+      yield* CORE[algo](sp[0], sp[1]);
+    }
+  }
+
+  function restartGen(keepCounters) {
+    gen = run(); finished = false; finishT = -1; range = null;
+    if (!keepCounters) { comparisons = 0; swaps = 0; }
+    done.fill(0); takeEdit();
+  }
+  function stepOnce() {
+    if (finished) return;
+    const r = gen.next();
+    if (r.done) {
+      finished = true; range = null; finishT = time; done.fill(1);
+      say(`Sorted! ${fmt(comparisons)} comparisons and ${fmt(swaps)} swaps.`, true);
+    }
+  }
+
+  /* ---------- data ---------- */
+  function values(kind) {
+    const v = [];
+    for (let i = 0; i < N; i++) v.push(0.06 + 0.94 * (i + 1) / N);
+    if (kind === 'reversed') v.reverse();
+    else if (kind === 'nearly') for (let k = 0; k < 5; k++) { const i = (Math.random() * (N - 3)) | 0, j = i + 1 + ((Math.random() * 3) | 0); [v[i], v[j]] = [v[j], v[i]]; }
+    else if (kind === 'few') for (let i = 0; i < N; i++) v[i] = 0.2 + 0.2 * ((Math.random() * 5) | 0);
+    else for (let i = N - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [v[i], v[j]] = [v[j], v[i]]; }
+    if (kind === 'few') return v;
+    return v.map(x => clamp(x + (Math.random() - 0.5) * 0.008, 0.04, 1));
+  }
+  function loadData(kind) {
+    const v = values(kind);
+    if (!a.length) a = v.map((x, i) => ({ id: i, v: x, x: i, h: 0, cmp: 0, swp: 0, piv: 0 }));
+    else a.forEach((b, i) => { b.v = v[i]; });
+    restartGen(false);
+  }
+
+  /* ---------- input ---------- */
+  const idxOf = id => a.findIndex(b => b.id === id);
+  const barTop = b => ay + ah * (1 - b.v);
+  pointerize(cv, {
+    down(p) {
+      const k = Math.floor((p.x - ax) / slot);
+      if (k < 0 || k >= N) return;
+      const b = a[k], top = barTop(b), tol = p.type === 'touch' ? 30 : 20;
+      if (p.y < top + tol) {
+        drag = { mode: 'height', id: b.id };
+        this.move(p);
+      } else {
+        drag = { mode: 'move', id: b.id, off: p.x - (ax + (k + 0.5) * slot), fx: k };
+        cv.style.cursor = 'grabbing';
+      }
+    },
+    move(p) {
+      if (!drag) return;
+      const i = idxOf(drag.id); if (i < 0) return;
+      if (drag.mode === 'height') {
+        const v = clamp((ay + ah - p.y) / ah, 0.03, 1);
+        if (Math.abs(v - a[i].v) < 1e-4) return;
+        a[i].v = v; noteEdit(i, i); afterEdit();
+        say(`You set bar ${i + 1} to ${Math.round(v * 100)}% height — ${NAME[algo]} will use the new height from its next step`, true);
+      } else {
+        drag.fx = clamp((p.x - drag.off - ax) / slot - 0.5, -0.4, N - 0.6);
+        const to = clamp(Math.round(drag.fx), 0, N - 1);
+        if (to !== i) {
+          const el = a.splice(i, 1)[0]; a.splice(to, 0, el);
+          noteEdit(Math.min(i, to), Math.max(i, to)); afterEdit();
+          say(`You moved a bar to position ${to + 1} — ${NAME[algo]} carries on with the new order`, true);
+        }
+      }
+    },
+    up() { drag = null; cv.style.cursor = ''; },
+    hover(p) {
+      const k = Math.floor((p.x - ax) / slot);
+      if (k < 0 || k >= N) { hoverId = -1; cv.style.cursor = ''; return; }
+      hoverId = a[k].id; hoverTop = p.y < barTop(a[k]) + 20;
+      cv.style.cursor = hoverTop ? 'ns-resize' : 'grab';
+    },
+    leave() { hoverId = -1; }
+  });
+  // An edit after the sort finished: if it broke the order, pick the sort back up.
+  function afterEdit() {
+    if (finished && unsortedSpan()) {
+      restartGen(true);
+      say(`You un-sorted it — ${NAME[algo]} picks up again`, true);
+    }
+  }
+
+  $('#so-algo').addEventListener('change', e => {
+    algo = e.target.value; restartGen(false);
+    say(`Switched to ${NAME[algo]} — ${BLURB[algo]}`, true);
+  });
+  for (const b of $$('#so-presets button')) b.addEventListener('click', () => {
+    loadData(b.dataset.v);
+    say(`New ${b.textContent.toLowerCase()} data — ${NAME[algo]} starts over`, true);
+  });
+
+  /* ---------- drawing ---------- */
+  function resize() {
+    const f = fitCanvas(cv); ctx = f.ctx; cw = f.w; ch = f.h;
+    const px = cw < 600 ? 12 : 30;
+    ax = px; aw = cw - px * 2; ay = cw < 600 ? 26 : 44; ah = ch - ay - (cw < 600 ? 16 : 30);
+    slot = aw / N;
+  }
+
+  function inversions() {
+    let inv = 0;
+    for (let i = 0; i < N; i++) { const v = a[i].v; for (let j = i + 1; j < N; j++) if (a[j].v < v) inv++; }
+    return inv;
+  }
+
+  function draw(dt) {
+    ctx.clearRect(0, 0, cw, ch);
+    // active range band
+    if (range) { rd.lo = rd.a < 0.02 ? range.lo : damp(rd.lo, range.lo, 14, dt); rd.hi = rd.a < 0.02 ? range.hi : damp(rd.hi, range.hi, 14, dt); }
+    rd.a = damp(rd.a, range && !finished ? 1 : 0, 8, dt);
+    if (rd.a > 0.01) {
+      const x0 = ax + rd.lo * slot + 2, x1 = ax + (rd.hi + 1) * slot - 2;
+      ctx.fillStyle = rgba(ACC, 0.06 * rd.a); roundRect(ctx, x0, ay - 14, x1 - x0, ah + 14, 10); ctx.fill();
+      ctx.fillStyle = rgba(ACC, 0.55 * rd.a); roundRect(ctx, x0, ay - 14, x1 - x0, 3, 2); ctx.fill();
+    }
+    // baseline
+    ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(ax, ay + ah + 3, aw, 1);
+    const bw = slot * 0.72, r = Math.min(6, bw * 0.35);
+    let dragged = null;
+    a.forEach((b, i) => {
+      const isDrag = drag && drag.id === b.id;
+      b.x = isDrag && drag.mode === 'move' ? damp(b.x, drag.fx, 40, dt) : damp(b.x, i, 16, dt);
+      b.h = damp(b.h, b.v, isDrag ? 30 : 14, dt);
+      b.cmp = Math.max(0, b.cmp - dt * 5); b.swp = Math.max(0, b.swp - dt * 5); b.piv = Math.max(0, b.piv - dt * 4);
+      if (isDrag) { dragged = b; return; }
+      drawBar(b, i, bw, r, false);
+    });
+    if (dragged) drawBar(dragged, idxOf(dragged.id), bw, r, true);
+  }
+
+  function drawBar(b, i, bw, r, lifted) {
+    const cx = ax + (b.x + 0.5) * slot, h = Math.max(2, ah * b.h), y = ay + ah - h;
+    let col = mix(LO, HI, b.h);
+    if (done[i]) col = mix(col, DONE, 0.85);
+    if (finishT >= 0) { const t = time - finishT - i * 0.014; if (t > 0 && t < 0.5) col = mix(col, ACC, Math.sin(t / 0.5 * Math.PI)); }
+    col = mix(col, ACC, Math.min(1, b.cmp * 1.2));
+    col = mix(col, PIV, Math.min(1, b.piv * 1.2));
+    col = mix(col, SWAPC, Math.min(1, b.swp * 1.2));
+    const glow = Math.max(b.cmp, b.swp);
+    ctx.save();
+    if (lifted) { ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 6; }
+    else if (glow > 0.2) { ctx.shadowColor = rgba(b.swp > b.cmp ? SWAPC : ACC, 0.7 * glow); ctx.shadowBlur = 14; }
+    ctx.fillStyle = rgba(col, 1);
+    const w = lifted ? bw * 1.15 : bw;
+    roundRect(ctx, cx - w / 2, y, w, h, r); ctx.fill();
+    ctx.restore();
+    if (b.id === hoverId || lifted) { // top handle hint
+      ctx.fillStyle = lifted || hoverTop ? rgba(ACC, 1) : 'rgba(255,255,255,0.55)';
+      roundRect(ctx, cx - w * 0.42, y - 7, w * 0.84, 3.5, 2); ctx.fill();
+    }
+  }
+
+  const el = { cmp: $('#so-cmp'), swp: $('#so-swp'), pct: $('#so-pct'), meter: $('#so-meter') };
+  function frame(dt) {
+    time += dt;
+    if (playing && !finished) {
+      acc += dt * SPS[mod.speed - 1];
+      let n = Math.min(Math.floor(acc), 400); acc -= n;
+      while (n-- > 0 && !finished) stepOnce();
+    } else acc = 0;
+    draw(dt);
+    const s = 1 - inversions() / (N * (N - 1) / 2);
+    sortedDisp = damp(sortedDisp, s, 8, dt);
+    el.cmp.textContent = fmt(comparisons); el.swp.textContent = fmt(swaps);
+    el.pct.textContent = Math.round(sortedDisp * 100) + '%';
+    el.meter.style.width = (sortedDisp * 100).toFixed(1) + '%';
+    if (finished) Status.set(`Sorted — ${fmt(comparisons)} comparisons, ${fmt(swaps)} swaps. Drag a bar out of place to give it more work.`);
+    else if (!playing) Status.set('Paused — drag bars around or resize them, then press play to watch the sort cope.');
+    else Status.set(msg);
+  }
+
+  const mod = {
+    canvas: cv, speed: 6,
+    get playing() { return playing; },
+    setPlaying(b) { playing = b; },
+    step() { stepOnce(); Status.set(finished ? 'Already sorted.' : msg, 1400); },
+    reset() { loadData('random'); say(`New random bars — ${NAME[algo]} starts over`, true); },
+    resize, frame, activate() {}
+  };
+
+  loadData('random');
+  a.forEach((b, i) => { b.x = i; });
+  return mod;
+})();
+App.register('sort', SORT);
+
+/* ================================================================
+   Boot
+   ================================================================ */
+let startTab = 'path';
+try { const s = localStorage.getItem('algo-playground-tab'); if (s && App.mods[s]) startTab = s; } catch (_) {}
+App.switchTo(startTab);
+requestAnimationFrame(() => { moveIndicator(); App.active.resize(); });
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
