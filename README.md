@@ -4,6 +4,8 @@ An interactive playground where algorithms run live and animated, and you can
 grab and change the data **while they run**. The algorithm reacts to your
 change instead of breaking or starting over.
 
+**Try it live: https://ham12-3.github.io/algorithm-playground/**
+
 Everything is in a single self-contained file, `algorithm-playground.html`
 (HTML, CSS and JavaScript, no libraries, no build step). Download it and open
 it in any modern browser. It works with mouse and touch.
